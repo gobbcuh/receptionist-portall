@@ -71,11 +71,11 @@ export class PatientDetailModal {
           <!-- Patient header -->
           <div class="flex items-center gap-4">
             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-foreground text-xl font-semibold">
-              ${this.patient.name.charAt(0)}
+                ${this.patient.name.charAt(0)}
             </div>
             <div>
-              <h3 class="font-semibold text-foreground">${this.patient.name}</h3>
-              <p class="text-sm text-muted-foreground">${this.patient.age} years old, ${this.patient.gender}</p>
+                <h3 class="font-semibold text-foreground">${this.patient.name}</h3>
+                <p class="text-sm text-muted-foreground">${this.patient.age} years old</p>
             </div>
           </div>
 
@@ -113,6 +113,18 @@ export class PatientDetailModal {
               <span class="text-foreground">
                 ${this.patient.hasFollowUp ? this.patient.followUpDate : "None scheduled"}
               </span>
+            </div>
+
+            <div class="flex items-center gap-3 text-sm">
+              <span id="sex-icon"></span>
+              <span class="text-muted-foreground">Sex:</span>
+              <span class="text-foreground">${this.patient.sex || "Not specified"}</span>
+            </div>
+
+            <div class="flex items-center gap-3 text-sm">
+              <span id="gender-icon"></span>
+              <span class="text-muted-foreground">Gender Identity:</span>
+              <span class="text-foreground">${this.patient.gender || "Not specified"}</span>
             </div>
 
             <div class="flex items-center gap-3 text-sm">
@@ -180,6 +192,12 @@ export class PatientDetailModal {
 
         const calendarIcon = modal.querySelector("#calendar-icon");
         if (calendarIcon) calendarIcon.appendChild(icons.calendar("h-4 w-4 text-muted-foreground"));
+
+        const sexIcon = modal.querySelector("#sex-icon");
+        if (sexIcon) sexIcon.appendChild(icons.user("h-4 w-4 text-muted-foreground"));
+
+        const genderIcon = modal.querySelector("#gender-icon");
+        if (genderIcon) genderIcon.appendChild(icons.heart("h-4 w-4 text-muted-foreground"));
 
         const emergencyIcon = modal.querySelector("#emergency-icon");
         if (emergencyIcon) emergencyIcon.appendChild(icons.user("h-4 w-4 text-muted-foreground"));

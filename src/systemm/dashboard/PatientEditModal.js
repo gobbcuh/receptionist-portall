@@ -77,26 +77,39 @@ export class PatientEditModal {
 
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <label class="text-sm font-medium text-foreground">Age</label>
-              <input id="age" type="number" value="${this.formData.age || ''}" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <label class="text-sm font-medium text-foreground">Age</label>
+                <input id="age" type="number" value="${this.formData.age || ''}" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div class="space-y-1.5">
-              <label class="text-sm font-medium text-foreground">Gender</label>
-              <select id="gender" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="Male" ${this.formData.gender === 'Male' ? 'selected' : ''}>Male</option>
-                <option value="Female" ${this.formData.gender === 'Female' ? 'selected' : ''}>Female</option>
-                <option value="Other" ${this.formData.gender === 'Other' ? 'selected' : ''}>Other</option>
-              </select>
+                <label class="text-sm font-medium text-foreground">Sex Assigned at Birth</label>
+                <select id="sex" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                    <option value="Male" ${this.formData.sex === 'Male' ? 'selected' : ''}>Male</option>
+                    <option value="Female" ${this.formData.sex === 'Female' ? 'selected' : ''}>Female</option>
+                </select>
             </div>
           </div>
 
+        <div class="space-y-1.5">
+            <label class="text-sm font-medium text-foreground">Gender Identity</label>
+            <select id="gender" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="Male" ${this.formData.gender === 'Male' ? 'selected' : ''}>Male</option>
+                <option value="Female" ${this.formData.gender === 'Female' ? 'selected' : ''}>Female</option>
+                <option value="Non-binary" ${this.formData.gender === 'Non-binary' ? 'selected' : ''}>Non-binary</option>
+                <option value="Prefer not to say" ${this.formData.gender === 'Prefer not to say' ? 'selected' : ''}>Prefer not to say</option>
+                <option value="Other" ${this.formData.gender === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+        </div>
+
           <!-- Doctor Assignment -->
           <div class="space-y-1.5">
-            <label class="text-sm font-medium text-foreground">Assigned Doctor</label>
-            <select id="assignedDoctor" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-              <option value="">Select doctor</option>
-              ${(this.doctors || []).map(doc => `<option value="${doc}" ${this.formData.assignedDoctor === doc ? 'selected' : ''}>${doc}</option>`).join('')}
-            </select>
+                <label class="text-sm font-medium text-foreground">Assigned Doctor</label>
+                <select id="assignedDoctor" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                    <option value="">Select doctor...</option>
+                    ${(this.doctors || []).map(doc => {
+                        const doctorName = typeof doc === 'string' ? doc : doc.full_name || `${doc.first_name} ${doc.last_name}`;
+                        return `<option value="${doctorName}" ${this.formData.assignedDoctor === doctorName ? 'selected' : ''}>${doctorName}</option>`;
+                    }).join('')}
+                </select>
           </div>
 
           <!-- Emergency Contact -->
@@ -231,10 +244,8 @@ export class PatientEditModal {
         const name = modal.querySelector("#name").value;
         const phone = modal.querySelector("#phone").value;
         const age = parseInt(modal.querySelector("#age").value);
+        const sex = modal.querySelector("#sex").value;
         const gender = modal.querySelector("#gender").value;
-        const emergencyContact = modal.querySelector("#emergencyContact").value;
-        const emergencyContactRelationship = modal.querySelector("#emergencyContactRelationship").value;
-        const emergencyPhone = modal.querySelector("#emergencyPhone").value;
         const assignedDoctor = modal.querySelector("#assignedDoctor").value;
         const hasFollowUp = modal.querySelector("#hasFollowUp").checked;
         const followUpDate = modal.querySelector("#followUpDate").value;
@@ -246,10 +257,8 @@ export class PatientEditModal {
             name,
             phone,
             age,
+            sex,
             gender,
-            emergencyContact,
-            emergencyContactRelationship,
-            emergencyPhone,
             assignedDoctor: assignedDoctor || undefined,
             hasFollowUp,
             followUpDate: hasFollowUp ? followUpDate : undefined,

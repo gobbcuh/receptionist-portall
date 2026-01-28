@@ -61,13 +61,16 @@ export class RegisterPatient {
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Date of Birth *</label><input id="dateOfBirth" type="date" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
-                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Gender *</label><select id="gender" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Sex Assigned at Birth *</label><select id="sex" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Gender Identity *</label><select id="gender" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="prefer not to say">Prefer not to say</option><option value="other">Other</option></select></div>
                         <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Phone *</label><input id="phone" type="tel" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
-                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Email</label><input id="email" type="email" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
                     </div>
-                    <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Address</label><input id="address" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Email</label><input id="email" type="email" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Address</label><input id="address" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+                    </div>
                     </div>
                 </div>
                 <div class="space-y-6">
@@ -168,6 +171,7 @@ export class RegisterPatient {
         const firstName = this.container?.querySelector("#firstName")?.value || "";
         const lastName = this.container?.querySelector("#lastName")?.value || "";
         const dateOfBirth = this.container?.querySelector("#dateOfBirth")?.value || "";
+        const sex = this.container?.querySelector("#sex")?.value || "";
         const gender = this.container?.querySelector("#gender")?.value || "";
         const phone = this.container?.querySelector("#phone")?.value || "";
         const email = this.container?.querySelector("#email")?.value || "";
@@ -190,6 +194,7 @@ export class RegisterPatient {
                 firstName,
                 lastName,
                 dateOfBirth,
+                sex,
                 gender,
                 phone,
                 email,
