@@ -1,134 +1,154 @@
-import { samplePatients, doctors } from "./patients";
-import { billingStore } from "./billingStore";
+import { PatientAPI, DashboardAPI } from '../services/api.js';
 
 class PatientStore {
-  constructor() {
-    this.patients = [...samplePatients];
-    this.listeners = [];
-  }
-
-  subscribe(listener) {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
-  }
-
-  notify() {
-    this.listeners.forEach(listener => listener(this.patients));
-  }
-
-  getPatients() {
-    return this.patients;
-  }
-
-  getPatientById(id) {
-    return this.patients.find(p => p.id === id);
-  }
-
-  // Get patients by status
-  getPatientsByStatus(status) {
-    return this.patients.filter(p => p.status === status);
-  }
-
-  // Get queue patients (waiting + checked-in)
-  getQueuePatients() {
-    return this.patients.filter(p => p.status === "waiting" || p.status === "checked-in");
-  }
-
-  // Get today's stats
-  getStats() {
-    const today = this.patients; // In a real app, filter by today's date
-    return {
-      total: today.length,
-      checkedIn: today.filter(p => p.status === "checked-in").length,
-      waiting: today.filter(p => p.status === "waiting").length,
-      completed: today.filter(p => p.status === "completed").length,
-      newToday: today.filter(p => p.isNew).length,
-    };
-  }
-
-  // Add new patient from registration
-  addPatient(patientData) {
-    const patientId = `P${String(Date.now()).slice(-6)}`;
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-    
-    const newPatient = {
-      id: patientId,
-      name: `${patientData.firstName} ${patientData.lastName}`,
-      age: patientData.dateOfBirth ? this.calculateAge(patientData.dateOfBirth) : null,
-      gender: patientData.gender ? patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : "",
-      phone: patientData.phone || "",
-      email: patientData.email || "",
-      address: patientData.address || "",
-      emergencyContact: patientData.emergencyContact || "",
-      emergencyPhone: patientData.emergencyPhone || "",
-      registrationTime: timeStr,
-      registrationDate: now.toISOString(),
-      status: "waiting", // New patients start as waiting
-      assignedDoctor: patientData.assignedDoctor || "",
-      hasFollowUp: patientData.hasFollowUp || false,
-      followUpDate: patientData.followUpDate || "",
-      medicalNotes: patientData.medicalNotes || "",
-      isNew: true, // Mark as newly registered today
-    };
-
-    this.patients.unshift(newPatient);
-    this.notify();
-
-    // Also create billing invoice
-    const invoice = billingStore.createInvoiceFromPatient({
-      ...patientData,
-      patientId: patientId,
-    });
-
-    return { patient: newPatient, invoice };
-  }
-
-  // Update patient status
-  updatePatientStatus(id, status) {
-    const index = this.patients.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.patients[index] = { ...this.patients[index], status };
-      this.notify();
-      return this.patients[index];
+    constructor() {
+        this.patients = [];
+        this.listeners = [];
     }
-    return null;
-  }
 
-  // Update patient data
-  updatePatient(id, updates) {
-    const index = this.patients.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.patients[index] = { ...this.patients[index], ...updates };
-      this.notify();
-      return this.patients[index];
+    subscribe(listener) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
     }
-    return null;
-  }
 
-  // Delete patient
-  deletePatient(id) {
-    const index = this.patients.findIndex(p => p.id === id);
-    if (index !== -1) {
-      const deleted = this.patients.splice(index, 1)[0];
-      this.notify();
-      return deleted;
+    notify() {
+        this.listeners.forEach(listener => listener(this.patients));
     }
-    return null;
-  }
 
-  calculateAge(dateOfBirth) {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    // getting all patients
+    async getPatients(filters = {}) {
+        try {
+            this.patients = await PatientAPI.getAll(filters);
+            this.notify();
+            return this.patients;
+        } catch (error) {
+            console.error('Failed to fetch patients:', error);
+            return [];
+        }
     }
-    return age;
-  }
+
+    // getting patient by ID
+    async getPatientById(id) {
+        try {
+            return await PatientAPI.getById(id);
+        } catch (error) {
+            console.error('Failed to fetch patient:', error);
+            return null;
+        }
+    }
+
+    // getting patients by status
+    async getPatientsByStatus(status) {
+        try {
+            const patients = await PatientAPI.getAll({ status });
+            return patients;
+        } catch (error) {
+            console.error('Failed to fetch patients by status:', error);
+            return [];
+        }
+    }
+
+    // getting queue patients (waiting + checked-in)
+    async getQueuePatients() {
+        try {
+            const patients = await PatientAPI.getQueue();
+            return patients;
+        } catch (error) {
+            console.error('Failed to fetch queue patients:', error);
+            return [];
+        }
+    }
+
+    // getting today's stats
+    async getStats() {
+        try {
+            const stats = await DashboardAPI.getStats();
+            return stats;
+        } catch (error) {
+            console.error('Failed to fetch stats:', error);
+            return {
+                total: 0,
+                checkedIn: 0,
+                waiting: 0,
+                completed: 0,
+                newToday: 0,
+            };
+        }
+    }
+
+    // adding new patient from registration
+    async addPatient(patientData) {
+        try {
+            const result = await PatientAPI.create(patientData);
+
+            if (result.patient) {
+                this.patients.unshift(result.patient);
+                this.notify();
+            }
+
+            return result;
+        } catch (error) {
+            console.error('Failed to add patient:', error);
+            throw error;
+        }
+    }
+
+    // updating patient status
+    async updatePatientStatus(id, status) {
+        try {
+            const updatedPatient = await PatientAPI.updateStatus(id, status);
+            
+            const index = this.patients.findIndex(p => p.id === id);
+            if (index !== -1) {
+            this.patients[index] = updatedPatient;
+            this.notify();
+            }
+            
+            return updatedPatient;
+        } catch (error) {
+            console.error('Failed to update patient status:', error);
+            throw error;
+        }
+    }
+
+    // updating patient data
+    async updatePatient(id, updates) {
+        try {
+            const updatedPatient = await PatientAPI.update(id, updates);
+            
+            const index = this.patients.findIndex(p => p.id === id);
+            if (index !== -1) {
+            this.patients[index] = updatedPatient;
+            this.notify();
+            }
+            
+            return updatedPatient;
+        } catch (error) {
+            console.error('Failed to update patient:', error);
+            throw error;
+        }
+    }
+
+    // deleting patient
+    async deletePatient(id) {
+        try {
+            await PatientAPI.delete(id);
+            
+            const index = this.patients.findIndex(p => p.id === id);
+            if (index !== -1) {
+            const deleted = this.patients.splice(index, 1)[0];
+            this.notify();  // notifies ALL subscribed pages
+            return deleted;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Failed to delete patient:', error);
+            throw error;
+        }
+    }
 }
 
 // Singleton instance

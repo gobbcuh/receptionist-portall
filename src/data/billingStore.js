@@ -1,9 +1,8 @@
-
-import { sampleInvoices, billingServices } from "./billing";
+import { BillingAPI } from '../services/api.js';
 
 class BillingStore {
   constructor() {
-    this.invoices = [...sampleInvoices];
+    this.invoices = [];
     this.listeners = [];
   }
 
@@ -18,56 +17,48 @@ class BillingStore {
     this.listeners.forEach(listener => listener(this.invoices));
   }
 
-  getInvoices() {
-    return this.invoices;
-  }
-
-  addInvoice(invoice) {
-    this.invoices.unshift(invoice);
-    this.notify();
-  }
-
-  updateInvoice(updatedInvoice) {
-    const index = this.invoices.findIndex(inv => inv.id === updatedInvoice.id);
-    if (index !== -1) {
-      this.invoices[index] = updatedInvoice;
+  // Get all invoices
+  async getInvoices(filters = {}) {
+    try {
+      this.invoices = await BillingAPI.getAll(filters);
       this.notify();
+      return this.invoices;
+    } catch (error) {
+      console.error('Failed to fetch invoices:', error);
+      return [];
     }
   }
 
-  // Create invoice from patient registration
-  createInvoiceFromPatient(patientData) {
-    const invoiceId = `INV-${String(this.invoices.length + 1).padStart(3, "0")}`;
-    const patientId = `P${String(Date.now()).slice(-6)}`;
-    
-    // Default consultation fee for new patients
-    const consultationService = billingServices.find(s => s.id === "consultation");
-    
-    const newInvoice = {
-      id: invoiceId,
-      patientId: patientId,
-      patientName: `${patientData.firstName} ${patientData.lastName}`,
-      phone: patientData.phone || "",
-      email: patientData.email || "",
-      assignedDoctor: patientData.assignedDoctor || "",
-      date: new Date().toISOString(),
-      items: [
-        {
-          description: consultationService?.name || "Consultation Fee",
-          quantity: 1,
-          unitPrice: consultationService?.price || 150,
-        },
-      ],
-      subtotal: consultationService?.price || 150,
-      tax: (consultationService?.price || 150) * 0.1,
-      total: (consultationService?.price || 150) * 1.1,
-      status: "pending",
-      paymentMethod: null,
-      paidDate: null,
-    };
+  // Add invoice (manual creation)
+  async addInvoice(invoiceData) {
+    try {
+      const invoice = await BillingAPI.create(invoiceData);
+      this.invoices.unshift(invoice);
+      this.notify();
+      return invoice;
+    } catch (error) {
+      console.error('Failed to create invoice:', error);
+      throw error;
+    }
+  }
 
-    this.addInvoice(newInvoice);
-    return newInvoice;
+  // Update invoice (mark as paid)
+  async updateInvoice(invoiceId, paymentMethod) {
+    try {
+      const updatedInvoice = await BillingAPI.markAsPaid(invoiceId, paymentMethod);
+      
+      // Update in local array
+      const index = this.invoices.findIndex(inv => inv.id === invoiceId);
+      if (index !== -1) {
+        this.invoices[index] = updatedInvoice;
+        this.notify();
+      }
+      
+      return updatedInvoice;
+    } catch (error) {
+      console.error('Failed to update invoice:', error);
+      throw error;
+    }
   }
 }
 

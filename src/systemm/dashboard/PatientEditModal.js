@@ -1,50 +1,60 @@
 import { cn } from "../../iconsss/utils";
 import { icons } from "../../iconsss/icons";
-import { doctors } from "../../data/patients";
 
 export class PatientEditModal {
-  constructor(onSave, onClose, onDelete) {
-    this.patient = null;
-    this.formData = {};
-    this.container = null;
-    this.onSave = onSave;
-    this.onClose = onClose;
-    this.onDelete = onDelete;
-  }
-
-  show(patient) {
-    this.patient = patient;
-    this.formData = { ...patient };
-    this.render();
-    document.body.appendChild(this.container);
-  }
-
-  hide() {
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
+    constructor(onSave, onClose, onDelete) {
+        this.patient = null;
+        this.formData = {};
+        this.container = null;
+        this.onSave = onSave;
+        this.onClose = onClose;
+        this.onDelete = onDelete;
     }
-    this.patient = null;
-    this.formData = {};
-    this.onClose();
-  }
 
-  render() {
-    if (!this.patient) return;
+    async show(patient) {
+        this.patient = patient;
+        this.formData = { ...patient };
+        
+        // Load doctors from API
+        try {
+            const { ReferenceAPI } = await import('../../services/api.js');
+            this.doctors = await ReferenceAPI.getDoctors();
+        } catch (error) {
+            console.error('Error loading doctors:', error);
+            const { doctors } = await import('../../data/patients.js');
+            this.doctors = doctors;
+        }
+        
+        this.render();
+        document.body.appendChild(this.container);
+    }
 
-    this.container = document.createElement("div");
-    this.container.id = "patient-edit-modal";
+    hide() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        this.patient = null;
+        this.formData = {};
+        this.onClose();
+    }
 
-    // Backdrop
-    const backdrop = document.createElement("div");
-    backdrop.className = "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in-0";
-    backdrop.addEventListener("click", () => this.hide());
+    render() {
+        if (!this.patient) return;
 
-    // Modal
-    const modal = document.createElement("div");
-    modal.className = "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95";
-    modal.addEventListener("click", (e) => e.stopPropagation());
+        this.container = document.createElement("div");
+        this.container.id = "patient-edit-modal";
 
-    modal.innerHTML = `
+        // Backdrop
+        const backdrop = document.createElement("div");
+        backdrop.className = "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in-0";
+        backdrop.addEventListener("click", () => this.hide());
+
+        // Modal
+        const modal = document.createElement("div");
+        modal.className = "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95";
+        modal.addEventListener("click", (e) => e.stopPropagation());
+
+        modal.innerHTML = `
       <div class="bg-card border border-border rounded-xl shadow-lg p-6 max-h-[90vh] overflow-y-auto">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
@@ -85,7 +95,7 @@ export class PatientEditModal {
             <label class="text-sm font-medium text-foreground">Assigned Doctor</label>
             <select id="assignedDoctor" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select doctor</option>
-              ${doctors.map(doc => `<option value="${doc}" ${this.formData.assignedDoctor === doc ? 'selected' : ''}>${doc}</option>`).join('')}
+              ${(this.doctors || []).map(doc => `<option value="${doc}" ${this.formData.assignedDoctor === doc ? 'selected' : ''}>${doc}</option>`).join('')}
             </select>
           </div>
 
@@ -142,79 +152,79 @@ export class PatientEditModal {
       </div>
     `;
 
-    // Add icons
-    const closeBtn = modal.querySelector("#close-modal-btn");
-    if (closeBtn) {
-      closeBtn.appendChild(icons.x("h-4 w-4"));
-      closeBtn.addEventListener("click", () => this.hide());
+        // Add icons
+        const closeBtn = modal.querySelector("#close-modal-btn");
+        if (closeBtn) {
+            closeBtn.appendChild(icons.x("h-4 w-4"));
+            closeBtn.addEventListener("click", () => this.hide());
+        }
+
+        const saveIcon = modal.querySelector("#save-icon");
+        if (saveIcon) saveIcon.appendChild(icons.save("h-4 w-4"));
+
+        const cancelBtn = modal.querySelector("#cancel-btn");
+        if (cancelBtn) {
+            cancelBtn.addEventListener("click", () => this.hide());
+        }
+
+        const deleteIcon = modal.querySelector("#delete-icon");
+        if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
+
+        const deleteBtn = modal.querySelector("#delete-btn");
+        if (deleteBtn) {
+            deleteBtn.addEventListener("click", () => {
+                this.hide();
+                this.onDelete?.(this.patient);
+            });
+        }
+
+        // Handle follow-up toggle
+        const hasFollowUpCheckbox = modal.querySelector("#hasFollowUp");
+        const followUpDateContainer = modal.querySelector("#followUpDateContainer");
+        if (hasFollowUpCheckbox && followUpDateContainer) {
+            hasFollowUpCheckbox.addEventListener("change", () => {
+                followUpDateContainer.classList.toggle("hidden", !hasFollowUpCheckbox.checked);
+            });
+        }
+
+        // Form submission
+        const form = modal.querySelector("#edit-form");
+        if (form) {
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.handleSubmit(modal);
+            });
+        }
+
+        this.container.appendChild(backdrop);
+        this.container.appendChild(modal);
     }
 
-    const saveIcon = modal.querySelector("#save-icon");
-    if (saveIcon) saveIcon.appendChild(icons.save("h-4 w-4"));
+    handleSubmit(modal) {
+        const name = modal.querySelector("#name").value;
+        const phone = modal.querySelector("#phone").value;
+        const age = parseInt(modal.querySelector("#age").value);
+        const gender = modal.querySelector("#gender").value;
+        const assignedDoctor = modal.querySelector("#assignedDoctor").value;
+        const hasFollowUp = modal.querySelector("#hasFollowUp").checked;
+        const followUpDate = modal.querySelector("#followUpDate").value;
+        const status = modal.querySelector("#status").value;
+        const medicalNotes = modal.querySelector("#medicalNotes").value;
 
-    const cancelBtn = modal.querySelector("#cancel-btn");
-    if (cancelBtn) {
-      cancelBtn.addEventListener("click", () => this.hide());
-    }
+        const updatedPatient = {
+            ...this.patient,
+            name,
+            phone,
+            age,
+            gender,
+            assignedDoctor: assignedDoctor || undefined,
+            hasFollowUp,
+            followUpDate: hasFollowUp ? followUpDate : undefined,
+            status,
+            medicalNotes: medicalNotes || undefined,
+        };
 
-    const deleteIcon = modal.querySelector("#delete-icon");
-    if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
-
-    const deleteBtn = modal.querySelector("#delete-btn");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", () => {
+        this.onSave(updatedPatient);
         this.hide();
-        this.onDelete?.(this.patient);
-      });
     }
-
-    // Handle follow-up toggle
-    const hasFollowUpCheckbox = modal.querySelector("#hasFollowUp");
-    const followUpDateContainer = modal.querySelector("#followUpDateContainer");
-    if (hasFollowUpCheckbox && followUpDateContainer) {
-      hasFollowUpCheckbox.addEventListener("change", () => {
-        followUpDateContainer.classList.toggle("hidden", !hasFollowUpCheckbox.checked);
-      });
-    }
-
-    // Form submission
-    const form = modal.querySelector("#edit-form");
-    if (form) {
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        this.handleSubmit(modal);
-      });
-    }
-
-    this.container.appendChild(backdrop);
-    this.container.appendChild(modal);
-  }
-
-  handleSubmit(modal) {
-    const name = modal.querySelector("#name").value;
-    const phone = modal.querySelector("#phone").value;
-    const age = parseInt(modal.querySelector("#age").value);
-    const gender = modal.querySelector("#gender").value;
-    const assignedDoctor = modal.querySelector("#assignedDoctor").value;
-    const hasFollowUp = modal.querySelector("#hasFollowUp").checked;
-    const followUpDate = modal.querySelector("#followUpDate").value;
-    const status = modal.querySelector("#status").value;
-    const medicalNotes = modal.querySelector("#medicalNotes").value;
-
-    const updatedPatient = {
-      ...this.patient,
-      name,
-      phone,
-      age,
-      gender,
-      assignedDoctor: assignedDoctor || undefined,
-      hasFollowUp,
-      followUpDate: hasFollowUp ? followUpDate : undefined,
-      status,
-      medicalNotes: medicalNotes || undefined,
-    };
-
-    this.onSave(updatedPatient);
-    this.hide();
-  }
 }

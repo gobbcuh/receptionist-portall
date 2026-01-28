@@ -1,5 +1,7 @@
 export const sampleInvoices = [];
 
+// Billing services - will be loaded from API
+// This is kept as fallback
 export const billingServices = [
   { id: "consultation", name: "Consultation Fee", price: 150 },
   { id: "followup", name: "Follow-up Visit", price: 100 },
@@ -15,6 +17,7 @@ export const billingServices = [
   { id: "prescription", name: "Prescription", price: 25 },
 ];
 
+// Payment methods - will be loaded from API
 export const paymentMethods = [
   "Cash",
   "Credit Card",

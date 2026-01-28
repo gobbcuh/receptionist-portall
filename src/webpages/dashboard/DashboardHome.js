@@ -5,33 +5,68 @@ import { PatientTable } from "../../systemm/dashboard/PatientTable";
 import { PatientDetailModal } from "../../systemm/dashboard/PatientDetailModal";
 
 export class DashboardHome {
-  constructor() {
-    this.detailModal = new PatientDetailModal(() => {});
-    this.container = null;
-    this.unsubscribe = null;
-  }
+    constructor() {
+        this.detailModal = new PatientDetailModal(() => { });
+        this.container = null;
+        this.unsubscribe = null;
+    }
 
-  render() {
-    this.container = document.createElement("div");
-    this.container.className = "space-y-6";
-    
-    // Subscribe to patient store updates
-    this.unsubscribe = patientStore.subscribe(() => {
-      this.updateContent();
-    });
-    
-    this.updateContent();
-    return this.container;
-  }
+    render() {
+        this.container = document.createElement("div");
+        this.container.className = "space-y-6";
+        
+        this.showLoading();
+        
+        this.loadData();
+        
+        // Subscribe to patient store updates
+        this.unsubscribe = patientStore.subscribe(() => {
+            if (patientStore.patients.length > 0) {
+                this.updateContent();
+            }
+        });
+        
+        return this.container;
+    }
 
-  updateContent() {
-    if (!this.container) return;
-    
-    const patients = patientStore.getPatients();
-    const stats = patientStore.getStats();
-    const recentPatients = patients.slice(0, 5);
+    showLoading() {
+        if (!this.container) return;
+        
+        this.container.innerHTML = `
+            <div class="flex items-center justify-center py-12">
+            <div class="text-center">
+                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                <p class="mt-2 text-sm text-muted-foreground">Loading dashboard...</p>
+            </div>
+            </div>
+        `;
+    }
 
-    this.container.innerHTML = `
+    async loadData() {
+        try {
+            if (patientStore.patients.length === 0) {
+            await patientStore.getPatients();
+            }
+            this.updateContent();
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    }
+
+    updateContent() {
+        if (!this.container) return;
+
+        const patients = patientStore.patients;  // Use store data
+        const stats = {
+            total: patients.length,
+            checkedIn: patients.filter(p => p.status === 'checked-in').length,
+            waiting: patients.filter(p => p.status === 'waiting').length,
+            completed: patients.filter(p => p.status === 'completed').length,
+            newToday: patients.filter(p => p.isNew).length,
+        };
+        const recentPatients = patients.slice(0, 5);
+
+        this.container.innerHTML = `
       <div>
         <h1 class="text-xl font-semibold text-foreground">Dashboard</h1>
         <p class="text-sm text-muted-foreground">Today's overview</p>
@@ -43,31 +78,31 @@ export class DashboardHome {
       </div>
     `;
 
-    // Stats Grid
-    const statsGrid = this.container.querySelector("#stats-grid");
-    const statsData = [
-      { title: "Total Patients", value: stats.total, variant: "primary" },
-      { title: "Checked In", value: stats.checkedIn, variant: "success" },
-      { title: "Waiting", value: stats.waiting, variant: "warning" },
-      { title: "New Today", value: stats.newToday, variant: "default" },
-    ];
+        // Stats Grid
+        const statsGrid = this.container.querySelector("#stats-grid");
+        const statsData = [
+            { title: "Total Patients", value: stats.total, variant: "primary" },
+            { title: "Checked In", value: stats.checkedIn, variant: "success" },
+            { title: "Waiting", value: stats.waiting, variant: "warning" },
+            { title: "New Today", value: stats.newToday, variant: "default" },
+        ];
 
-    statsData.forEach(stat => {
-      statsGrid?.appendChild(new StatsCard(stat).render());
-    });
+        statsData.forEach(stat => {
+            statsGrid?.appendChild(new StatsCard(stat).render());
+        });
 
-    // Recent Patients Table
-    const tableContainer = this.container.querySelector("#recent-table");
-    const table = new PatientTable({
-      patients: recentPatients,
-      onViewPatient: (patient) => this.detailModal.show(patient),
-    });
-    tableContainer?.appendChild(table.render());
-  }
-
-  destroy() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
+        // Recent Patients Table
+        const tableContainer = this.container.querySelector("#recent-table");
+        const table = new PatientTable({
+            patients: recentPatients,
+            onViewPatient: (patient) => this.detailModal.show(patient),
+        });
+        tableContainer?.appendChild(table.render());
     }
-  }
+
+    destroy() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+    }
 }

@@ -7,91 +7,138 @@ import { InvoiceDetailModal } from "../../systemm/dashboard/InvoiceDetailModal";
 import { PaymentModal } from "../../systemm/dashboard/PaymentModal";
 
 export class Billing {
-  constructor() {
-    this.searchQuery = "";
-    this.statusFilter = "all";
-    this.container = null;
-    this.message = null;
-    this.unsubscribe = null;
+    constructor() {
+        this.searchQuery = "";
+        this.statusFilter = "all";
+        this.container = null;
+        this.message = null;
+        this.unsubscribe = null;
 
-    this.unsubscribe = billingStore.subscribe(() => {
-      this.updateContent();
-    });
+        this.unsubscribe = billingStore.subscribe(() => {
+            this.updateContent();
+        });
 
-    this.createModal = new CreateInvoiceModal(
-      (invoice) => {
-        billingStore.addInvoice(invoice);
-        this.showMessage("Invoice created successfully!", "success");
-      },
-      () => {}
-    );
+        this.createModal = new CreateInvoiceModal(
+            async (invoice) => {
+                try {
+                await billingStore.addInvoice(invoice);
+                this.showMessage("Invoice created successfully!", "success");
+                } catch (error) {
+                this.showMessage("Failed to create invoice", "error");
+                }
+            },
+            () => {}
+        );
 
-    this.detailModal = new InvoiceDetailModal(() => {});
+        this.detailModal = new InvoiceDetailModal(() => { });
 
-    this.paymentModal = new PaymentModal(
-      (updatedInvoice) => {
-        billingStore.updateInvoice(updatedInvoice);
-        this.showMessage("Payment recorded successfully!", "success");
-      },
-      () => {}
-    );
-  }
+        this.paymentModal = new PaymentModal(
+            async (updatedInvoice) => {
+                try {
+                await billingStore.updateInvoice(updatedInvoice.id, updatedInvoice.paymentMethod);
+                this.showMessage("Payment recorded successfully!", "success");
+                } catch (error) {
+                this.showMessage("Failed to record payment", "error");
+                }
+            },
+            () => {}
+        );
+    }
 
-  get invoices() {
-    return billingStore.getInvoices();
-  }
+    get invoices() {
+        return billingStore.invoices;
+    }
 
-  showMessage(text, type) {
-    this.message = { text, type };
-    setTimeout(() => {
-      this.message = null;
-      this.updateContent();
-    }, 3000);
-  }
+    showMessage(text, type) {
+        this.message = { text, type };
+        setTimeout(() => {
+            this.message = null;
+            this.updateContent();
+        }, 3000);
+    }
 
-  getFilteredInvoices() {
-    return this.invoices.filter((invoice) => {
-      const matchesSearch = 
-        invoice.id.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        invoice.patientName.toLowerCase().includes(this.searchQuery.toLowerCase());
-      const matchesStatus = this.statusFilter === "all" || invoice.status === this.statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }
+    getFilteredInvoices() {
+        return this.invoices.filter((invoice) => {
+            const matchesSearch = 
+            invoice.id.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            invoice.patientName.toLowerCase().includes(this.searchQuery.toLowerCase());
+            const matchesStatus = this.statusFilter === "all" || invoice.status.toLowerCase() === this.statusFilter.toLowerCase();
+            return matchesSearch && matchesStatus;
+        });
+    }
 
-  getStats() {
-    const totalRevenue = this.invoices
-      .filter(inv => inv.status === "paid")
-      .reduce((sum, inv) => sum + inv.total, 0);
-    
-    const pendingAmount = this.invoices
-      .filter(inv => inv.status === "pending" || inv.status === "overdue")
-      .reduce((sum, inv) => sum + inv.total, 0);
+    getStats() {
+        const totalRevenue = this.invoices
+            .filter(inv => inv.status === "paid")
+            .reduce((sum, inv) => sum + inv.total, 0);
 
-    return {
-      totalInvoices: this.invoices.length,
-      paidInvoices: this.invoices.filter(inv => inv.status === "paid").length,
-      pendingInvoices: this.invoices.filter(inv => inv.status === "pending").length,
-      overdueInvoices: this.invoices.filter(inv => inv.status === "overdue").length,
-      totalRevenue,
-      pendingAmount,
-    };
-  }
+        const pendingAmount = this.invoices
+            .filter(inv => inv.status === "pending" || inv.status === "overdue")
+            .reduce((sum, inv) => sum + inv.total, 0);
 
-  render() {
-    this.container = document.createElement("div");
-    this.container.className = "space-y-6";
-    this.updateContent();
-    return this.container;
-  }
+        return {
+            totalInvoices: this.invoices.length,
+            paidInvoices: this.invoices.filter(inv => inv.status === "paid").length,
+            pendingInvoices: this.invoices.filter(inv => inv.status === "pending").length,
+            overdueInvoices: this.invoices.filter(inv => inv.status === "overdue").length,
+            totalRevenue,
+            pendingAmount,
+        };
+    }
 
-  updateContent() {
-    if (!this.container) return;
+    render() {
+        this.container = document.createElement("div");
+        this.container.className = "space-y-6";
+        
+        this.showLoading();
+        
+        this.loadData();
+        
+        this.unsubscribe = billingStore.subscribe(() => {
+            if (billingStore.invoices.length >= 0) {
+            this.updateContent();
+            }
+        });
+        
+        return this.container;
+    }
 
-    const stats = this.getStats();
-    const filteredInvoices = this.getFilteredInvoices();
+    showLoading() {
+        if (!this.container) return;
+        
+        this.container.innerHTML = `
+            <div class="flex items-center justify-center py-12">
+            <div class="text-center">
+                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                <p class="mt-2 text-sm text-muted-foreground">Loading invoices...</p>
+            </div>
+            </div>
+        `;
+    }
 
-    this.container.innerHTML = `
+    async loadData() {
+        try {
+            await billingStore.getInvoices();
+            this.updateContent();
+        } catch (error) {
+            console.error('Error loading invoices:', error);
+            if (this.container) {
+            this.container.innerHTML = `
+                <div class="p-4 rounded-lg bg-destructive/10 text-destructive">
+                <p>Error loading invoices: ${error.message}</p>
+                </div>
+            `;
+            }
+        }
+    }
+
+    updateContent() {
+        if (!this.container) return;
+
+        const stats = this.getStats();
+        const filteredInvoices = this.getFilteredInvoices();
+
+        this.container.innerHTML = `
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 class="text-xl font-semibold text-foreground">Billing</h1>
@@ -135,68 +182,68 @@ export class Billing {
       <div id="table-container"></div>
     `;
 
-    // Add icons
-    const plusIcon = this.container.querySelector("#plus-icon");
-    plusIcon.appendChild(icons.userPlus("h-4 w-4"));
+        // Add icons
+        const plusIcon = this.container.querySelector("#plus-icon");
+        plusIcon.appendChild(icons.userPlus("h-4 w-4"));
 
-    const searchIcon = this.container.querySelector("#search-icon");
-    searchIcon.appendChild(icons.search("h-4 w-4"));
+        const searchIcon = this.container.querySelector("#search-icon");
+        searchIcon.appendChild(icons.search("h-4 w-4"));
 
-    // Create invoice button
-    const createBtn = this.container.querySelector("#create-invoice-btn");
-    createBtn.addEventListener("click", () => this.createModal.show());
+        // Create invoice button
+        const createBtn = this.container.querySelector("#create-invoice-btn");
+        createBtn.addEventListener("click", () => this.createModal.show());
 
-    // Message
-    if (this.message) {
-      const messageContainer = this.container.querySelector("#message-container");
-      messageContainer.innerHTML = `
+        // Message
+        if (this.message) {
+            const messageContainer = this.container.querySelector("#message-container");
+            messageContainer.innerHTML = `
         <div class="p-3 rounded-lg ${this.message.type === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"} text-sm">
           ${this.message.text}
         </div>
       `;
+        }
+
+        // Stats
+        const statsGrid = this.container.querySelector("#stats-grid");
+        const statsData = [
+            { title: "Total Revenue", value: `₱${stats.totalRevenue.toFixed(0)}`, variant: "primary" },
+            { title: "Paid Invoices", value: stats.paidInvoices, variant: "success" },
+            { title: "Pending", value: stats.pendingInvoices, variant: "warning" },
+            { title: "Overdue", value: stats.overdueInvoices, variant: "default" },
+        ];
+        statsData.forEach(stat => {
+            statsGrid.appendChild(new StatsCard(stat).render());
+        });
+
+        // Search input
+        const searchInput = this.container.querySelector("#search-input");
+        searchInput.addEventListener("input", (e) => {
+            this.searchQuery = e.target.value;
+            this.updateContent();
+        });
+
+        // Status filter
+        const statusFilter = this.container.querySelector("#status-filter");
+        statusFilter.addEventListener("change", (e) => {
+            this.statusFilter = e.target.value;
+            this.updateContent();
+        });
+
+        // Table
+        const tableContainer = this.container.querySelector("#table-container");
+        const table = new BillingTable({
+            invoices: filteredInvoices,
+            onViewInvoice: (invoice) => this.detailModal.show(invoice),
+            onMarkPaid: (invoice) => this.paymentModal.show(invoice),
+            onPrintInvoice: (invoice) => this.printInvoice(invoice),
+        });
+        tableContainer.appendChild(table.render());
     }
 
-    // Stats
-    const statsGrid = this.container.querySelector("#stats-grid");
-    const statsData = [
-      { title: "Total Revenue", value: `₱${stats.totalRevenue.toFixed(0)}`, variant: "primary" },
-      { title: "Paid Invoices", value: stats.paidInvoices, variant: "success" },
-      { title: "Pending", value: stats.pendingInvoices, variant: "warning" },
-      { title: "Overdue", value: stats.overdueInvoices, variant: "default" },
-    ];
-    statsData.forEach(stat => {
-      statsGrid.appendChild(new StatsCard(stat).render());
-    });
-
-    // Search input
-    const searchInput = this.container.querySelector("#search-input");
-    searchInput.addEventListener("input", (e) => {
-      this.searchQuery = e.target.value;
-      this.updateContent();
-    });
-
-    // Status filter
-    const statusFilter = this.container.querySelector("#status-filter");
-    statusFilter.addEventListener("change", (e) => {
-      this.statusFilter = e.target.value;
-      this.updateContent();
-    });
-
-    // Table
-    const tableContainer = this.container.querySelector("#table-container");
-    const table = new BillingTable({
-      invoices: filteredInvoices,
-      onViewInvoice: (invoice) => this.detailModal.show(invoice),
-      onMarkPaid: (invoice) => this.paymentModal.show(invoice),
-      onPrintInvoice: (invoice) => this.printInvoice(invoice),
-    });
-    tableContainer.appendChild(table.render());
-  }
-
-  printInvoice(invoice) {
-    // Simple print functionality
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
+    printInvoice(invoice) {
+        // Simple print functionality
+        const printWindow = window.open("", "_blank");
+        printWindow.document.write(`
       <html>
         <head>
           <title>Invoice ${invoice.id}</title>
@@ -230,7 +277,7 @@ export class Billing {
         </body>
       </html>
     `);
-    printWindow.document.close();
-    printWindow.print();
-  }
+        printWindow.document.close();
+        printWindow.print();
+    }
 }
