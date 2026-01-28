@@ -14,7 +14,7 @@ export class PatientEditModal {
     async show(patient) {
         this.patient = patient;
         this.formData = { ...patient };
-        
+
         // Load doctors from API
         try {
             const { ReferenceAPI } = await import('../../services/api.js');
@@ -24,7 +24,7 @@ export class PatientEditModal {
             const { doctors } = await import('../../data/patients.js');
             this.doctors = doctors;
         }
-        
+
         this.render();
         document.body.appendChild(this.container);
     }
@@ -96,6 +96,33 @@ export class PatientEditModal {
             <select id="assignedDoctor" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select doctor</option>
               ${(this.doctors || []).map(doc => `<option value="${doc}" ${this.formData.assignedDoctor === doc ? 'selected' : ''}>${doc}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Emergency Contact -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-foreground">Contact Name</label>
+              <input id="emergencyContact" value="${this.formData.emergencyContact || ''}" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-foreground">Contact Phone</label>
+              <input id="emergencyPhone" value="${this.formData.emergencyPhone || ''}" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium text-foreground">Relationship</label>
+            <select id="emergencyContactRelationship" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <option value="">Select relationship...</option>
+              <option value="Spouse" ${this.formData.emergencyContactRelationship === 'Spouse' ? 'selected' : ''}>Spouse</option>
+              <option value="Parent" ${this.formData.emergencyContactRelationship === 'Parent' ? 'selected' : ''}>Parent</option>
+              <option value="Child" ${this.formData.emergencyContactRelationship === 'Child' ? 'selected' : ''}>Child</option>
+              <option value="Sibling" ${this.formData.emergencyContactRelationship === 'Sibling' ? 'selected' : ''}>Sibling</option>
+              <option value="Partner" ${this.formData.emergencyContactRelationship === 'Partner' ? 'selected' : ''}>Partner</option>
+              <option value="Friend" ${this.formData.emergencyContactRelationship === 'Friend' ? 'selected' : ''}>Friend</option>
+              <option value="Guardian" ${this.formData.emergencyContactRelationship === 'Guardian' ? 'selected' : ''}>Guardian</option>
+              <option value="Other" ${this.formData.emergencyContactRelationship === 'Other' ? 'selected' : ''}>Other</option>
             </select>
           </div>
 
@@ -205,6 +232,9 @@ export class PatientEditModal {
         const phone = modal.querySelector("#phone").value;
         const age = parseInt(modal.querySelector("#age").value);
         const gender = modal.querySelector("#gender").value;
+        const emergencyContact = modal.querySelector("#emergencyContact").value;
+        const emergencyContactRelationship = modal.querySelector("#emergencyContactRelationship").value;
+        const emergencyPhone = modal.querySelector("#emergencyPhone").value;
         const assignedDoctor = modal.querySelector("#assignedDoctor").value;
         const hasFollowUp = modal.querySelector("#hasFollowUp").checked;
         const followUpDate = modal.querySelector("#followUpDate").value;
@@ -217,6 +247,9 @@ export class PatientEditModal {
             phone,
             age,
             gender,
+            emergencyContact,
+            emergencyContactRelationship,
+            emergencyPhone,
             assignedDoctor: assignedDoctor || undefined,
             hasFollowUp,
             followUpDate: hasFollowUp ? followUpDate : undefined,

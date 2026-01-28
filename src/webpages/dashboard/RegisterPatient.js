@@ -99,6 +99,7 @@ export class RegisterPatient {
                     <h2 class="text-base font-medium text-foreground mb-4">Emergency Contact</h2>
                     <div class="space-y-4">
                         <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Contact Name</label><input id="emergencyContact" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Relationship</label><select id="emergencyContactRelationship" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"><option value="">Select relationship...</option><option value="Spouse">Spouse</option><option value="Parent">Parent</option><option value="Child">Child</option><option value="Sibling">Sibling</option><option value="Partner">Partner</option><option value="Friend">Friend</option><option value="Guardian">Guardian</option><option value="Other">Other</option></select></div>
                         <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Contact Phone</label><input id="emergencyPhone" type="tel" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
                     </div>
                     </div>
@@ -172,6 +173,7 @@ export class RegisterPatient {
         const email = this.container?.querySelector("#email")?.value || "";
         const address = this.container?.querySelector("#address")?.value || "";
         const emergencyContact = this.container?.querySelector("#emergencyContact")?.value || "";
+        const emergencyContactRelationship = this.container?.querySelector("#emergencyContactRelationship")?.value || "";
         const emergencyPhone = this.container?.querySelector("#emergencyPhone")?.value || "";
         const assignedDoctor = this.container?.querySelector("#assignedDoctor")?.value || "";
         const hasFollowUp = this.container?.querySelector("#hasFollowUp")?.checked || false;
@@ -193,6 +195,7 @@ export class RegisterPatient {
                 email,
                 address,
                 emergencyContact,
+                emergencyContactRelationship,
                 emergencyPhone,
                 assignedDoctor,
                 hasFollowUp,

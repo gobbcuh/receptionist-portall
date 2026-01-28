@@ -2,64 +2,64 @@ import { cn } from "../../iconsss/utils";
 import { icons } from "../../iconsss/icons";
 
 const statusConfig = {
-  waiting: {
-    label: "Waiting",
-    className: "bg-warning/10 text-warning border-warning/20",
-    icon: "clock",
-  },
-  "checked-in": {
-    label: "Checked In",
-    className: "bg-primary/10 text-primary border-primary/20",
-    icon: "user",
-  },
-  completed: {
-    label: "Completed",
-    className: "bg-success/10 text-success border-success/20",
-    icon: "checkCircle",
-  },
+    waiting: {
+        label: "Waiting",
+        className: "bg-warning/10 text-warning border-warning/20",
+        icon: "clock",
+    },
+    "checked-in": {
+        label: "Checked In",
+        className: "bg-primary/10 text-primary border-primary/20",
+        icon: "user",
+    },
+    completed: {
+        label: "Completed",
+        className: "bg-success/10 text-success border-success/20",
+        icon: "checkCircle",
+    },
 };
 
 export class PatientDetailModal {
-  constructor(onClose, onDelete) {
-    this.patient = null;
-    this.container = null;
-    this.onClose = onClose;
-    this.onDelete = onDelete;
-  }
-
-  show(patient) {
-    this.patient = patient;
-    this.render();
-    document.body.appendChild(this.container);
-  }
-
-  hide() {
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
+    constructor(onClose, onDelete) {
+        this.patient = null;
+        this.container = null;
+        this.onClose = onClose;
+        this.onDelete = onDelete;
     }
-    this.patient = null;
-    this.onClose();
-  }
 
-  render() {
-    if (!this.patient) return;
+    show(patient) {
+        this.patient = patient;
+        this.render();
+        document.body.appendChild(this.container);
+    }
 
-    const status = statusConfig[this.patient.status];
+    hide() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        this.patient = null;
+        this.onClose();
+    }
 
-    this.container = document.createElement("div");
-    this.container.id = "patient-detail-modal";
+    render() {
+        if (!this.patient) return;
 
-    // Backdrop
-    const backdrop = document.createElement("div");
-    backdrop.className = "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in-0";
-    backdrop.addEventListener("click", () => this.hide());
+        const status = statusConfig[this.patient.status];
 
-    // Modal
-    const modal = document.createElement("div");
-    modal.className = "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95";
-    modal.addEventListener("click", (e) => e.stopPropagation());
+        this.container = document.createElement("div");
+        this.container.id = "patient-detail-modal";
 
-    modal.innerHTML = `
+        // Backdrop
+        const backdrop = document.createElement("div");
+        backdrop.className = "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in-0";
+        backdrop.addEventListener("click", () => this.hide());
+
+        // Modal
+        const modal = document.createElement("div");
+        modal.className = "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95";
+        modal.addEventListener("click", (e) => e.stopPropagation());
+
+        modal.innerHTML = `
       <div class="bg-card border border-border rounded-xl shadow-lg p-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
@@ -114,6 +114,25 @@ export class PatientDetailModal {
                 ${this.patient.hasFollowUp ? this.patient.followUpDate : "None scheduled"}
               </span>
             </div>
+
+            <div class="flex items-center gap-3 text-sm">
+              <span id="emergency-icon"></span>
+              <span class="text-muted-foreground">Emergency Contact:</span>
+              <span class="text-foreground">${this.patient.emergencyContact || "Not provided"}</span>
+            </div>
+
+            ${this.patient.emergencyContactRelationship ? `
+              <div class="flex items-center gap-3 text-sm">
+                <span id="relationship-icon"></span>
+                <span class="text-muted-foreground">Relationship:</span>
+                <span class="text-foreground">${this.patient.emergencyContactRelationship}</span>
+              </div>
+            ` : ''}
+
+            <div class="flex items-center gap-3 text-sm">
+              <span id="emergency-phone-icon"></span>
+              <span class="text-foreground">${this.patient.emergencyPhone || "No phone"}</span>
+            </div>
           </div>
 
           ${this.patient.medicalNotes ? `
@@ -140,43 +159,52 @@ export class PatientDetailModal {
       </div>
     `;
 
-    // Add icons
-    const closeBtn = modal.querySelector("#close-modal-btn");
-    if (closeBtn) {
-      closeBtn.appendChild(icons.x("h-4 w-4"));
-      closeBtn.addEventListener("click", () => this.hide());
+        // Add icons
+        const closeBtn = modal.querySelector("#close-modal-btn");
+        if (closeBtn) {
+            closeBtn.appendChild(icons.x("h-4 w-4"));
+            closeBtn.addEventListener("click", () => this.hide());
+        }
+
+        const statusIcon = modal.querySelector("#status-icon");
+        if (statusIcon) statusIcon.appendChild(icons[status.icon]("h-3 w-3"));
+
+        const phoneIcon = modal.querySelector("#phone-icon");
+        if (phoneIcon) phoneIcon.appendChild(icons.phone("h-4 w-4 text-muted-foreground"));
+
+        const clockIcon = modal.querySelector("#clock-icon");
+        if (clockIcon) clockIcon.appendChild(icons.clock("h-4 w-4 text-muted-foreground"));
+
+        const doctorIcon = modal.querySelector("#doctor-icon");
+        if (doctorIcon) doctorIcon.appendChild(icons.stethoscope("h-4 w-4 text-muted-foreground"));
+
+        const calendarIcon = modal.querySelector("#calendar-icon");
+        if (calendarIcon) calendarIcon.appendChild(icons.calendar("h-4 w-4 text-muted-foreground"));
+
+        const emergencyIcon = modal.querySelector("#emergency-icon");
+        if (emergencyIcon) emergencyIcon.appendChild(icons.user("h-4 w-4 text-muted-foreground"));
+
+        const relationshipIcon = modal.querySelector("#relationship-icon");
+        if (relationshipIcon) relationshipIcon.appendChild(icons.user("h-4 w-4 text-muted-foreground"));
+
+        const emergencyPhoneIcon = modal.querySelector("#emergency-phone-icon");
+        if (emergencyPhoneIcon) emergencyPhoneIcon.appendChild(icons.phone("h-4 w-4 text-muted-foreground"));
+
+        const notesIcon = modal.querySelector("#notes-icon");
+        if (notesIcon) notesIcon.appendChild(icons.fileText("h-4 w-4 text-muted-foreground"));
+
+        const deleteIcon = modal.querySelector("#delete-icon");
+        if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
+
+        const deleteBtn = modal.querySelector("#delete-btn");
+        if (deleteBtn) {
+            deleteBtn.addEventListener("click", () => {
+                this.hide();
+                this.onDelete?.(this.patient);
+            });
+        }
+
+        this.container.appendChild(backdrop);
+        this.container.appendChild(modal);
     }
-
-    const statusIcon = modal.querySelector("#status-icon");
-    if (statusIcon) statusIcon.appendChild(icons[status.icon]("h-3 w-3"));
-
-    const phoneIcon = modal.querySelector("#phone-icon");
-    if (phoneIcon) phoneIcon.appendChild(icons.phone("h-4 w-4 text-muted-foreground"));
-
-    const clockIcon = modal.querySelector("#clock-icon");
-    if (clockIcon) clockIcon.appendChild(icons.clock("h-4 w-4 text-muted-foreground"));
-
-    const doctorIcon = modal.querySelector("#doctor-icon");
-    if (doctorIcon) doctorIcon.appendChild(icons.stethoscope("h-4 w-4 text-muted-foreground"));
-
-    const calendarIcon = modal.querySelector("#calendar-icon");
-    if (calendarIcon) calendarIcon.appendChild(icons.calendar("h-4 w-4 text-muted-foreground"));
-
-    const notesIcon = modal.querySelector("#notes-icon");
-    if (notesIcon) notesIcon.appendChild(icons.fileText("h-4 w-4 text-muted-foreground"));
-
-    const deleteIcon = modal.querySelector("#delete-icon");
-    if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
-
-    const deleteBtn = modal.querySelector("#delete-btn");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", () => {
-        this.hide();
-        this.onDelete?.(this.patient);
-      });
-    }
-
-    this.container.appendChild(backdrop);
-    this.container.appendChild(modal);
-  }
 }
