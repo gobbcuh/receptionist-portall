@@ -56,7 +56,7 @@ export class PatientTable {
           <th class="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient</th>
           <th class="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Age / Gender</th>
           <th class="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assigned Doctor</th>
-          <th class="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time</th>
+          <th class="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Registered</th>
           <th class="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
           <th class="px-5 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
         </tr>
