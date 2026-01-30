@@ -96,6 +96,7 @@ export class DashboardHome {
         const table = new PatientTable({
             patients: recentPatients,
             onViewPatient: (patient) => this.detailModal.show(patient),
+            viewOnly: true
         });
         tableContainer?.appendChild(table.render());
     }

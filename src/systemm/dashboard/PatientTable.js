@@ -25,7 +25,7 @@ export class PatientTable {
     }
 
     render() {
-        const { patients, onCheckIn, onViewPatient, onEditPatient, onDeletePatient, showCheckIn = false } = this.config;
+        const { patients, onCheckIn, onViewPatient, onEditPatient, onDeletePatient, showCheckIn = false, viewOnly = false } = this.config;
 
         const container = document.createElement("div");
         container.className = "overflow-hidden rounded-xl border border-border bg-card shadow-sm";
@@ -152,23 +152,26 @@ export class PatientTable {
             // Add action buttons
             const actionsContainer = tr.querySelector(".actions-container");
             if (actionsContainer) {
-                // View button
+                // View button (ALWAYS shown)
                 const viewBtn = this.createActionButton(icons.eye("h-4 w-4"), "View patient details", () => {
                     onViewPatient?.(patient);
                 });
                 actionsContainer.appendChild(viewBtn);
 
-                // Edit button
-                const editBtn = this.createActionButton(icons.pencil("h-4 w-4"), "Edit patient info", () => {
-                    onEditPatient?.(patient);
-                });
-                actionsContainer.appendChild(editBtn);
+                // Edit and Delete buttons (ONLY if not viewOnly)
+                if (!viewOnly) {
+                    // Edit button
+                    const editBtn = this.createActionButton(icons.pencil("h-4 w-4"), "Edit patient info", () => {
+                        onEditPatient?.(patient);
+                    });
+                    actionsContainer.appendChild(editBtn);
 
-                // Delete button
-                const deleteBtn = this.createActionButton(icons.trash("h-4 w-4"), "Delete patient", () => {
-                    onDeletePatient?.(patient);
-                }, true);
-                actionsContainer.appendChild(deleteBtn);
+                    // Delete button
+                    const deleteBtn = this.createActionButton(icons.trash("h-4 w-4"), "Delete patient", () => {
+                        onDeletePatient?.(patient);
+                    }, true);
+                    actionsContainer.appendChild(deleteBtn);
+                }
 
                 // Check-in button
                 if (showCheckIn && patient.status === "waiting") {

@@ -79,8 +79,8 @@ export class RegisterPatient {
                         <div class="space-y-4">
                             <!-- Department Selection -->
                             <div class="space-y-1.5">
-                                <label class="text-sm font-medium text-foreground">Department</label>
-                                <select id="department" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                <label class="text-sm font-medium text-foreground">Department *</label>
+                                <select id="department" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                     <option value="">Select department...</option>
                                     ${this.departments.map(dept => `<option value="${dept.department_id}">${dept.name} (${dept.code})</option>`).join('')}
                                 </select>
@@ -88,8 +88,8 @@ export class RegisterPatient {
                             
                             <!-- Doctor Selection (hidden until department is selected) -->
                             <div id="doctorContainer" class="space-y-1.5 ${this.selectedDepartment ? '' : 'hidden'}">
-                                <label class="text-sm font-medium text-foreground">Assigned Doctor</label>
-                                <select id="assignedDoctor" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                <label class="text-sm font-medium text-foreground">Assigned Doctor *</label>
+                                <select id="assignedDoctor" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                     <option value="">Select doctor...</option>
                                 </select>
                             </div>
@@ -101,14 +101,14 @@ export class RegisterPatient {
                     <div class="rounded-xl border border-border bg-card p-6">
                     <h2 class="text-base font-medium text-foreground mb-4">Emergency Contact</h2>
                     <div class="space-y-4">
-                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Contact Name</label><input id="emergencyContact" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
-                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Relationship</label><select id="emergencyContactRelationship" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"><option value="">Select relationship...</option><option value="Spouse">Spouse</option><option value="Parent">Parent</option><option value="Child">Child</option><option value="Sibling">Sibling</option><option value="Partner">Partner</option><option value="Friend">Friend</option><option value="Guardian">Guardian</option><option value="Other">Other</option></select></div>
-                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Contact Phone</label><input id="emergencyPhone" type="tel" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Contact Name *</label><input id="emergencyContact" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Relationship *</label><select id="emergencyContactRelationship" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"><option value="">Select relationship...</option><option value="Spouse">Spouse</option><option value="Parent">Parent</option><option value="Child">Child</option><option value="Sibling">Sibling</option><option value="Partner">Partner</option><option value="Friend">Friend</option><option value="Guardian">Guardian</option><option value="Other">Other</option></select></div>
+                        <div class="space-y-1.5"><label class="text-sm font-medium text-foreground">Contact Phone *</label><input id="emergencyPhone" type="tel" required class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
                     </div>
                     </div>
                     <div class="rounded-xl border border-border bg-card p-6">
-                        <h2 class="text-base font-medium text-foreground mb-4">Chief Complaint</h2>
-                        <textarea id="medicalNotes" placeholder="e.g., Chest pain, fever, skin rash, broken arm..." rows="4" class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"></textarea>
+                        <h2 class="text-base font-medium text-foreground mb-4">Chief Complaint *</h2>
+                        <textarea id="medicalNotes" required placeholder="e.g., Chest pain, fever, skin rash, broken arm..." rows="4" class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"></textarea>
                     </div>
                     <button type="submit" id="submit-btn" class="w-full h-10 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50" ${this.isLoading ? 'disabled' : ''}>${this.isLoading ? '<span class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span> Registering...' : '<span id="save-icon"></span> Register Patient'}</button>
                 </div>
@@ -168,22 +168,50 @@ export class RegisterPatient {
     }
 
     async handleSubmit() {
-        const firstName = this.container?.querySelector("#firstName")?.value || "";
-        const lastName = this.container?.querySelector("#lastName")?.value || "";
+
+        const firstName = this.container?.querySelector("#firstName")?.value.trim() || "";
+        const lastName = this.container?.querySelector("#lastName")?.value.trim() || "";
         const dateOfBirth = this.container?.querySelector("#dateOfBirth")?.value || "";
         const sex = this.container?.querySelector("#sex")?.value || "";
         const gender = this.container?.querySelector("#gender")?.value || "";
-        const phone = this.container?.querySelector("#phone")?.value || "";
-        const email = this.container?.querySelector("#email")?.value || "";
-        const address = this.container?.querySelector("#address")?.value || "";
-        const emergencyContact = this.container?.querySelector("#emergencyContact")?.value || "";
+        const phone = this.container?.querySelector("#phone")?.value.trim() || "";
+        const email = this.container?.querySelector("#email")?.value.trim() || "";
+        const address = this.container?.querySelector("#address")?.value.trim() || "";
+        const emergencyContact = this.container?.querySelector("#emergencyContact")?.value.trim() || "";
         const emergencyContactRelationship = this.container?.querySelector("#emergencyContactRelationship")?.value || "";
-        const emergencyPhone = this.container?.querySelector("#emergencyPhone")?.value || "";
+        const emergencyPhone = this.container?.querySelector("#emergencyPhone")?.value.trim() || "";
         const assignedDoctor = this.container?.querySelector("#assignedDoctor")?.value || "";
+        const department = this.container?.querySelector("#department")?.value || "";
         const hasFollowUp = this.container?.querySelector("#hasFollowUp")?.checked || false;
         const followUpDate = this.container?.querySelector("#followUpDate")?.value || "";
-        const medicalNotes = this.container?.querySelector("#medicalNotes")?.value || "";
+        const medicalNotes = this.container?.querySelector("#medicalNotes")?.value.trim() || "";
 
+        // ============================================================================
+        // VALIDATION: Check all required fields
+        // ============================================================================
+        const errors = [];
+        
+        if (!firstName) errors.push("First Name is required");
+        if (!lastName) errors.push("Last Name is required");
+        if (!dateOfBirth) errors.push("Date of Birth is required");
+        if (!sex) errors.push("Sex Assigned at Birth is required");
+        if (!gender) errors.push("Gender Identity is required");
+        if (!phone) errors.push("Phone is required");
+        if (!emergencyContact) errors.push("Emergency Contact Name is required");
+        if (!emergencyContactRelationship) errors.push("Emergency Contact Relationship is required");
+        if (!emergencyPhone) errors.push("Emergency Contact Phone is required");
+        if (!department) errors.push("Department is required");
+        if (!assignedDoctor) errors.push("Assigned Doctor is required");
+        if (!medicalNotes) errors.push("Chief Complaint is required");
+        
+        if (errors.length > 0) {
+            alert("Please fill in all required fields:\n\n• " + errors.join("\n• "));
+            return;
+        }
+
+        // ============================================================================
+        // PROCEED WITH REGISTRATION (only if validation passed)
+        // ============================================================================
         this.isLoading = true;
         this.message = null;
         this.updateContent();
@@ -215,7 +243,6 @@ export class RegisterPatient {
             this.isLoading = false;
             this.updateContent();
 
-            // Reset form
             const form = this.container?.querySelector("#register-form");
             if (form) form.reset();
 
