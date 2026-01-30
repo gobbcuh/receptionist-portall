@@ -91,8 +91,9 @@ export class PatientDetailModal {
           <!-- Info grid -->
           <div class="grid gap-4">
             <div class="flex items-center gap-3 text-sm">
-              <span id="phone-icon"></span>
-              <span class="text-foreground">${this.patient.phone}</span>
+                <span id="phone-icon"></span>
+                <span class="text-muted-foreground">Phone:</span>
+                <span class="text-foreground">${this.patient.phone || "Not provided"}</span>
             </div>
             
             <div class="flex items-center gap-3 text-sm">
@@ -142,8 +143,9 @@ export class PatientDetailModal {
             ` : ''}
 
             <div class="flex items-center gap-3 text-sm">
-              <span id="emergency-phone-icon"></span>
-              <span class="text-foreground">${this.patient.emergencyPhone || "No phone"}</span>
+                <span id="emergency-phone-icon"></span>
+                <span class="text-muted-foreground">Contact Phone:</span>
+                <span class="text-foreground">${this.patient.emergencyPhone || "Not provided"}</span>
             </div>
           </div>
 
