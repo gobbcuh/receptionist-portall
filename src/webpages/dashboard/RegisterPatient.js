@@ -7,7 +7,7 @@ export class RegisterPatient {
         this.formData = {
             firstName: "", lastName: "", dateOfBirth: "", gender: "", phone: "", email: "",
             address: "", emergencyContact: "", emergencyPhone: "", assignedDoctor: "",
-            hasFollowUp: false, followUpDate: "", medicalNotes: "",
+            medicalNotes: "",
         };
         this.isLoading = false;
         this.message = null;
@@ -93,9 +93,6 @@ export class RegisterPatient {
                                     <option value="">Select doctor...</option>
                                 </select>
                             </div>
-                            
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="hasFollowUp" class="h-4 w-4 rounded border-primary text-primary focus:ring-primary" /><span class="text-sm text-foreground">Schedule follow-up</span></label>
-                            <div id="followUpContainer" class="space-y-1.5 hidden"><label class="text-sm font-medium text-foreground">Follow-up Date</label><input id="followUpDate" type="date" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" /></div>
                         </div>
                     </div>
                     <div class="rounded-xl border border-border bg-card p-6">
@@ -118,10 +115,6 @@ export class RegisterPatient {
 
         const saveIcon = this.container.querySelector("#save-icon");
         if (saveIcon) saveIcon.appendChild(icons.save("h-4 w-4"));
-
-        const hasFollowUp = this.container.querySelector("#hasFollowUp");
-        const followUpContainer = this.container.querySelector("#followUpContainer");
-        hasFollowUp?.addEventListener("change", () => followUpContainer?.classList.toggle("hidden", !hasFollowUp.checked));
 
         // Department selection handler
         const departmentSelect = this.container.querySelector("#department");
@@ -182,8 +175,6 @@ export class RegisterPatient {
         const emergencyPhone = this.container?.querySelector("#emergencyPhone")?.value.trim() || "";
         const assignedDoctor = this.container?.querySelector("#assignedDoctor")?.value || "";
         const department = this.container?.querySelector("#department")?.value || "";
-        const hasFollowUp = this.container?.querySelector("#hasFollowUp")?.checked || false;
-        const followUpDate = this.container?.querySelector("#followUpDate")?.value || "";
         const medicalNotes = this.container?.querySelector("#medicalNotes")?.value.trim() || "";
 
         // ============================================================================
@@ -231,8 +222,6 @@ export class RegisterPatient {
                 emergencyContactRelationship,
                 emergencyPhone,
                 assignedDoctor,
-                hasFollowUp,
-                followUpDate,
                 medicalNotes,
             });
 

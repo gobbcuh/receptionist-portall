@@ -115,12 +115,28 @@ export class CheckInQueue {
                 const patient = patientStore.patients.find(p => p.id === id);
                 try {
                     await patientStore.updatePatientStatus(id, "checked-in");
-                    this.message = { type: "success", text: `${patient?.name} has been checked in.` };
+                    this.message = { 
+                        type: "success", 
+                        text: `${patient?.name} has been checked in.` 
+                    };
                     this.updateContent();
-                    setTimeout(() => { this.message = null; this.updateContent(); }, 3000);
+                    setTimeout(() => { 
+                        this.message = null; 
+                        this.updateContent(); 
+                    }, 3000);
                 } catch (error) {
-                    this.message = { type: "error", text: "Failed to check in patient" };
+                    const errorMessage = error.message || "Failed to check in patient";
+                    
+                    this.message = { 
+                        type: "error", 
+                        text: `${errorMessage}` 
+                    };
                     this.updateContent();
+                    
+                    setTimeout(() => { 
+                        this.message = null; 
+                        this.updateContent(); 
+                    }, 5000);
                 }
             },
             onViewPatient: (p) => this.detailModal.show(p),
