@@ -3,50 +3,50 @@ import { format } from "date-fns";
 import { cn } from "../../iconsss/utils";
 
 const statusConfig = {
-  paid: {
-    label: "Paid",
-    className: "bg-success/10 text-success",
-  },
-  pending: {
-    label: "Pending",
-    className: "bg-warning/10 text-warning",
-  },
-  overdue: {
-    label: "Overdue",
-    className: "bg-destructive/10 text-destructive",
-  },
+    paid: {
+        label: "Paid",
+        className: "bg-success/10 text-success",
+    },
+    pending: {
+        label: "Pending",
+        className: "bg-warning/10 text-warning",
+    },
+    overdue: {
+        label: "Overdue",
+        className: "bg-destructive/10 text-destructive",
+    },
 };
 
 export class InvoiceDetailModal {
-  constructor(onClose) {
-    this.onClose = onClose;
-    this.container = null;
-    this.invoice = null;
-  }
-
-  show(invoice) {
-    this.invoice = invoice;
-    this.render();
-    document.body.appendChild(this.container);
-  }
-
-  hide() {
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
+    constructor(onClose) {
+        this.onClose = onClose;
+        this.container = null;
+        this.invoice = null;
     }
-    this.container = null;
-    this.onClose?.();
-  }
 
-  render() {
-    if (!this.invoice) return;
+    show(invoice) {
+        this.invoice = invoice;
+        this.render();
+        document.body.appendChild(this.container);
+    }
 
-    const status = statusConfig[this.invoice.status];
+    hide() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        this.container = null;
+        this.onClose?.();
+    }
 
-    this.container = document.createElement("div");
-    this.container.className = "fixed inset-0 z-50 flex items-center justify-center p-4";
+    render() {
+        if (!this.invoice) return;
 
-    this.container.innerHTML = `
+        const status = statusConfig[this.invoice.status];
+
+        this.container = document.createElement("div");
+        this.container.className = "fixed inset-0 z-50 flex items-center justify-center p-4";
+
+        this.container.innerHTML = `
       <div class="absolute inset-0 bg-foreground/50 backdrop-blur-sm" id="backdrop"></div>
       <div class="relative bg-card rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div class="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -122,16 +122,16 @@ export class InvoiceDetailModal {
       </div>
     `;
 
-    // Add icons
-    const closeBtn = this.container.querySelector("#close-btn");
-    closeBtn.appendChild(icons.x("h-5 w-5 text-muted-foreground"));
-    closeBtn.addEventListener("click", () => this.hide());
+        // Add icons
+        const closeBtn = this.container.querySelector("#close-btn");
+        closeBtn.appendChild(icons.x("h-5 w-5 text-muted-foreground"));
+        closeBtn.addEventListener("click", () => this.hide());
 
-    const patientIcon = this.container.querySelector("#patient-icon");
-    patientIcon.appendChild(icons.user("h-6 w-6 text-primary"));
+        const patientIcon = this.container.querySelector("#patient-icon");
+        patientIcon.appendChild(icons.user("h-6 w-6 text-primary"));
 
-    // Backdrop click
-    const backdrop = this.container.querySelector("#backdrop");
-    backdrop.addEventListener("click", () => this.hide());
-  }
+        // Backdrop click
+        const backdrop = this.container.querySelector("#backdrop");
+        backdrop.addEventListener("click", () => this.hide());
+    }
 }

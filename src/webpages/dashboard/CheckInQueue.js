@@ -4,6 +4,8 @@ import { StatsCard } from "../../systemm/dashboard/StatsCard";
 import { PatientTable } from "../../systemm/dashboard/PatientTable";
 import { PatientDetailModal } from "../../systemm/dashboard/PatientDetailModal";
 import { DeleteConfirmModal } from "../../systemm/dashboard/DeleteConfirmModal";
+import { PatientEditModal } from "../../systemm/dashboard/PatientEditModal";
+
 
 export class CheckInQueue {
     constructor() {
@@ -11,7 +13,7 @@ export class CheckInQueue {
         this.message = null;
         this.unsubscribe = null;
 
-        // Delete confirmation modal
+        // delete modal
         this.deleteModal = new DeleteConfirmModal(
             async (patient) => {
                 try {
@@ -27,7 +29,25 @@ export class CheckInQueue {
             () => {}
         );
 
+        // view modal
         this.detailModal = new PatientDetailModal(
+            () => { },
+            (patient) => this.deleteModal.show(patient)
+        );
+
+        // edit modal
+        this.editModal = new PatientEditModal(
+            async (patient) => {
+                try {
+                    await patientStore.updatePatient(patient.id, patient);
+                    this.message = { type: "success", text: `${patient.name}'s information saved.` };
+                    this.updateContent();
+                    setTimeout(() => { this.message = null; this.updateContent(); }, 3000);
+                } catch (error) {
+                    this.message = { type: "error", text: "Failed to update patient" };
+                    this.updateContent();
+                }
+            },
             () => { },
             (patient) => this.deleteModal.show(patient)
         );
@@ -140,12 +160,14 @@ export class CheckInQueue {
                 }
             },
             onViewPatient: (p) => this.detailModal.show(p),
+            onEditPatient: (p) => this.editModal.show(p),
             onDeletePatient: (p) => this.deleteModal.show(p),
         }).render());
 
         this.container.querySelector("#checked-table")?.appendChild(new PatientTable({
             patients: checkedIn,
             onViewPatient: (p) => this.detailModal.show(p),
+            onEditPatient: (p) => this.editModal.show(p),
             onDeletePatient: (p) => this.deleteModal.show(p),
         }).render());
     }
