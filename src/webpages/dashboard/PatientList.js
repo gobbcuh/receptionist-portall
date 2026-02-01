@@ -158,17 +158,18 @@ export class PatientList {
                             id="status-filter"
                             class="w-[140px] h-10 px-3 rounded-lg border border-input bg-background text-foreground text-sm"
                         >
-                            <option value="all">All Status</option>
-                            <option value="waiting">Waiting</option>
-                            <option value="checked-in">Checked In</option>
-                            <option value="completed">Completed</option>
+                            <option value="all" ${this.statusFilter === 'all' ? 'selected' : ''}>All Status</option>
+                            <option value="waiting" ${this.statusFilter === 'waiting' ? 'selected' : ''}>Waiting</option>
+                            <option value="checked-in" ${this.statusFilter === 'checked-in' ? 'selected' : ''}>Checked In</option>
+                            <option value="completed" ${this.statusFilter === 'completed' ? 'selected' : ''}>Completed</option>
                         </select>
                         <select
                             id="doctor-filter"
-                            class="w-[160px] h-10 px-3 rounded-lg border border-input bg-background text-foreground text-sm"
+                            class="w-[160px] h-10 px-3 rounded-lg border border-input bg-background text-foreground text-sm truncate"
+                            title="${this.doctorFilter !== 'all' ? this.doctorFilter : ''}"
                         >
-                            <option value="all">All Doctors</option>
-                            ${uniqueDoctors.map(d => `<option value="${d}">${d}</option>`).join("")}
+                            <option value="all" ${this.doctorFilter === 'all' ? 'selected' : ''}>All Doctors</option>
+                            ${uniqueDoctors.map(d => `<option value="${d}" ${this.doctorFilter === d ? 'selected' : ''} title="${d}">${d}</option>`).join("")}
                         </select>
                     </div>
                 </div>
