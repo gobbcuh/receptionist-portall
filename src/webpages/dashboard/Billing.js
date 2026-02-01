@@ -146,7 +146,7 @@ export class Billing {
         </div>
         <button id="create-invoice-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
           <span id="plus-icon"></span>
-          New Invoice
+          Add Services
         </button>
       </div>
       
