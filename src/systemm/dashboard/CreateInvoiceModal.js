@@ -1,5 +1,4 @@
 import { icons } from "../../iconsss/icons";
-import { billingServices, paymentMethods } from "../../data/billing";
 import { patientStore } from "../../data/patientStore";
 
 export class CreateInvoiceModal {
@@ -10,20 +9,40 @@ export class CreateInvoiceModal {
         this.items = [{ serviceId: "", quantity: 1, unitPrice: 0, description: "" }];
         this.selectedPatient = "";
         this.patients = [];
+        this.availableServices = [];
     }
 
     async show() {
         this.items = [{ serviceId: "", quantity: 1, unitPrice: 0, description: "" }];
         this.selectedPatient = "";
-        
+
         try {
             await patientStore.getPatients();
             this.patients = patientStore.patients;
+            
+            const response = await fetch('http://localhost:5000/api/services', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+            
+            if (response.ok) {
+                const services = await response.json();
+                
+                this.availableServices = services.filter(s => s.id !== 'consultation');
+                
+                console.log('Loaded services (excluding consultation):', this.availableServices.length);
+            } else {
+                console.error('Failed to load services');
+                this.availableServices = [];
+            }
+            
         } catch (error) {
-            console.error('Error loading patients:', error);
+            console.error('Error loading data:', error);
             this.patients = [];
+            this.availableServices = [];
         }
-        
+
         this.render();
         document.body.appendChild(this.container);
     }
@@ -148,7 +167,7 @@ export class CreateInvoiceModal {
         <div class="flex-1">
           <select class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" data-index="${index}" data-field="service">
             <option value="">Select service...</option>
-            ${billingServices.map(s => `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""}>${s.name} - ₱${s.price}</option>`).join("")}
+            ${this.availableServices.map(s => `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""}>${s.name} - ₱${parseFloat(s.price).toFixed(2)}</option>`).join("")}
           </select>
         </div>
         <div class="w-20">
@@ -174,10 +193,10 @@ export class CreateInvoiceModal {
             const serviceSelect = itemDiv.querySelector(`[data-field="service"]`);
             serviceSelect.addEventListener("change", (e) => {
                 const serviceId = e.target.value;
-                const service = billingServices.find(s => s.id === serviceId);
+                const service = this.availableServices.find(s => s.id === serviceId);
                 this.items[index].serviceId = serviceId;
                 this.items[index].description = service?.name || "";
-                this.items[index].unitPrice = service?.price || 0;
+                this.items[index].unitPrice = parseFloat(service?.price) || 0;
                 this.renderItems();
                 this.updateTotals();
             });
