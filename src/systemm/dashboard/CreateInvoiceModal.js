@@ -53,7 +53,7 @@ export class CreateInvoiceModal {
       <div class="absolute inset-0 bg-foreground/50 backdrop-blur-sm" id="backdrop"></div>
       <div class="relative bg-card rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div class="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 class="text-lg font-semibold text-foreground">Create New Invoice</h2>
+          <h2 class="text-lg font-semibold text-foreground">Add Services to Invoice</h2>
           <button id="close-btn" class="p-1 rounded-md hover:bg-muted transition-colors"></button>
         </div>
         
