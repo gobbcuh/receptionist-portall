@@ -140,10 +140,15 @@ export class PatientEditModal {
 
           <!-- Follow-up -->
           <div class="space-y-3">
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer" id="followUpLabel">
               <input type="checkbox" id="hasFollowUp" ${this.formData.hasFollowUp ? 'checked' : ''} class="h-4 w-4 rounded border-primary text-primary focus:ring-primary" />
               <span class="text-sm text-foreground">Has follow-up checkup</span>
             </label>
+            
+            <!-- Helper text (shown when disabled) -->
+            <p id="followUpHelperText" class="text-xs text-muted-foreground hidden">
+              Complete consultation to schedule follow-up
+            </p>
 
             <div id="followUpDateContainer" class="space-y-1.5 ${this.formData.hasFollowUp ? '' : 'hidden'}">
               <label class="text-sm font-medium text-foreground">Follow-up Date</label>
@@ -198,9 +203,57 @@ export class PatientEditModal {
             cancelBtn.addEventListener("click", () => this.hide());
         }
 
-        // Handle follow-up toggle
+        // Handle follow-up availability based on status
+        const statusSelect = modal.querySelector("#status");
         const hasFollowUpCheckbox = modal.querySelector("#hasFollowUp");
+        const followUpLabel = modal.querySelector("#followUpLabel");
         const followUpDateContainer = modal.querySelector("#followUpDateContainer");
+        const followUpHelperText = modal.querySelector("#followUpHelperText");
+        
+        // Function to update follow-up availability
+        const updateFollowUpAvailability = () => {
+            const status = statusSelect.value;
+            const isCompleted = (status === 'completed');
+            
+            // Enable/disable checkbox
+            hasFollowUpCheckbox.disabled = !isCompleted;
+            
+            // Update label styling
+            if (followUpLabel) {
+                if (isCompleted) {
+                    followUpLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+                    followUpLabel.classList.add('cursor-pointer');
+                } else {
+                    followUpLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                    followUpLabel.classList.remove('cursor-pointer');
+                }
+            }
+            
+            // Show/hide helper text
+            if (followUpHelperText) {
+                if (isCompleted) {
+                    followUpHelperText.classList.add('hidden');
+                } else {
+                    followUpHelperText.classList.remove('hidden');
+                }
+            }
+            
+            // If disabled, uncheck and hide date field
+            if (!isCompleted) {
+                hasFollowUpCheckbox.checked = false;
+                followUpDateContainer.classList.add('hidden');
+            }
+        };
+        
+        // Run on load
+        updateFollowUpAvailability();
+        
+        // Listen to status changes
+        if (statusSelect) {
+            statusSelect.addEventListener('change', updateFollowUpAvailability);
+        }
+        
+        // Handle follow-up checkbox toggle (only when enabled)
         if (hasFollowUpCheckbox && followUpDateContainer) {
             hasFollowUpCheckbox.addEventListener("change", () => {
                 followUpDateContainer.classList.toggle("hidden", !hasFollowUpCheckbox.checked);
