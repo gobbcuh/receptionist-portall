@@ -167,7 +167,7 @@ export class CreateInvoiceModal {
         <div class="flex-1">
           <select class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" data-index="${index}" data-field="service">
             <option value="">Select service...</option>
-            ${this.availableServices.map(s => `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""}>${s.name} - ₱${parseFloat(s.price).toFixed(2)}</option>`).join("")}
+            ${this.availableServices.map(s => `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""}>${s.name}</option>`).join("")}
           </select>
         </div>
         <div class="w-20">
