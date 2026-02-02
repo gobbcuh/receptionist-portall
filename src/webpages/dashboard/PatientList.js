@@ -26,11 +26,7 @@ export class PatientList {
             () => {}
         );
 
-        // Detail modal with delete callback
-        this.detailModal = new PatientDetailModal(
-            () => {},
-            (patient) => this.deleteModal.show(patient)
-        );
+        this.detailModal = new PatientDetailModal(() => {});
 
         // Edit modal with delete callback
         this.editModal = new PatientEditModal(
@@ -40,8 +36,7 @@ export class PatientList {
                 this.updateContent();
                 setTimeout(() => { this.message = null; this.updateContent(); }, 3000);
             },
-            () => {},
-            (patient) => this.deleteModal.show(patient)
+            () => {}
         );
     }
 

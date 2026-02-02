@@ -2,13 +2,12 @@ import { cn } from "../../iconsss/utils";
 import { icons } from "../../iconsss/icons";
 
 export class PatientEditModal {
-    constructor(onSave, onClose, onDelete) {
+    constructor(onSave, onClose) {
         this.patient = null;
         this.formData = {};
         this.container = null;
         this.onSave = onSave;
         this.onClose = onClose;
-        this.onDelete = onDelete;
     }
 
     async show(patient) {
@@ -106,9 +105,9 @@ export class PatientEditModal {
                 <select id="assignedDoctor" class="w-full h-9 px-3 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                     <option value="">Select doctor...</option>
                     ${(this.doctors || []).map(doc => {
-                        const doctorName = typeof doc === 'string' ? doc : doc.full_name || `${doc.first_name} ${doc.last_name}`;
-                        return `<option value="${doctorName}" ${this.formData.assignedDoctor === doctorName ? 'selected' : ''}>${doctorName}</option>`;
-                    }).join('')}
+            const doctorName = typeof doc === 'string' ? doc : doc.full_name || `${doc.first_name} ${doc.last_name}`;
+            return `<option value="${doctorName}" ${this.formData.assignedDoctor === doctorName ? 'selected' : ''}>${doctorName}</option>`;
+        }).join('')}
                 </select>
           </div>
 
@@ -179,14 +178,6 @@ export class PatientEditModal {
                 Save Changes
               </button>
             </div>
-            
-            <!-- Delete Button -->
-            <div class="pt-2 border-t border-border">
-              <button type="button" id="delete-btn" class="w-full px-4 py-2.5 rounded-lg border border-destructive/30 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors flex items-center justify-center gap-2">
-                <span id="delete-icon"></span>
-                Delete Patient
-              </button>
-            </div>
           </div>
         </form>
       </div>
@@ -205,17 +196,6 @@ export class PatientEditModal {
         const cancelBtn = modal.querySelector("#cancel-btn");
         if (cancelBtn) {
             cancelBtn.addEventListener("click", () => this.hide());
-        }
-
-        const deleteIcon = modal.querySelector("#delete-icon");
-        if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
-
-        const deleteBtn = modal.querySelector("#delete-btn");
-        if (deleteBtn) {
-            deleteBtn.addEventListener("click", () => {
-                this.hide();
-                this.onDelete?.(this.patient);
-            });
         }
 
         // Handle follow-up toggle

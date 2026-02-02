@@ -20,11 +20,10 @@ const statusConfig = {
 };
 
 export class PatientDetailModal {
-    constructor(onClose, onDelete) {
+    constructor(onClose) {
         this.patient = null;
         this.container = null;
         this.onClose = onClose;
-        this.onDelete = onDelete;
     }
 
     show(patient) {
@@ -161,14 +160,6 @@ export class PatientDetailModal {
               </div>
             </div>
           ` : ''}
-
-          <!-- Delete Button -->
-          <div class="pt-2 border-t border-border">
-            <button id="delete-btn" class="w-full px-4 py-2.5 rounded-lg border border-destructive/30 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors flex items-center justify-center gap-2">
-              <span id="delete-icon"></span>
-              Delete Patient
-            </button>
-          </div>
         </div>
       </div>
     `;
@@ -212,17 +203,6 @@ export class PatientDetailModal {
 
         const notesIcon = modal.querySelector("#notes-icon");
         if (notesIcon) notesIcon.appendChild(icons.fileText("h-4 w-4 text-muted-foreground"));
-
-        const deleteIcon = modal.querySelector("#delete-icon");
-        if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
-
-        const deleteBtn = modal.querySelector("#delete-btn");
-        if (deleteBtn) {
-            deleteBtn.addEventListener("click", () => {
-                this.hide();
-                this.onDelete?.(this.patient);
-            });
-        }
 
         this.container.appendChild(backdrop);
         this.container.appendChild(modal);
