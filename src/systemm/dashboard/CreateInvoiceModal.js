@@ -403,8 +403,8 @@ export class CreateInvoiceModal {
                 const isDisabled = isConsultationDisabled || isFollowUpDisabled;
                 
                 let disabledReason = '';
-                if (isConsultationDisabled) disabledReason = ' (already charged)';
-                if (isFollowUpDisabled) disabledReason = ' (already added)';
+                if (isConsultationDisabled) disabledReason = '';
+                if (isFollowUpDisabled) disabledReason = '';
                 
                 return `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""} ${isDisabled ? 'disabled' : ''}>${s.name} - ₱${parseFloat(s.price).toFixed(2)}${disabledReason}</option>`;
             }).join("")}

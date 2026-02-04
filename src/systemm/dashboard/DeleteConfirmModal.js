@@ -1,44 +1,44 @@
 import { icons } from "../../iconsss/icons";
 
 export class DeleteConfirmModal {
-  constructor(onConfirm, onClose) {
-    this.patient = null;
-    this.container = null;
-    this.onConfirm = onConfirm;
-    this.onClose = onClose;
-  }
-
-  show(patient) {
-    this.patient = patient;
-    this.render();
-    document.body.appendChild(this.container);
-  }
-
-  hide() {
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
+    constructor(onConfirm, onClose) {
+        this.patient = null;
+        this.container = null;
+        this.onConfirm = onConfirm;
+        this.onClose = onClose;
     }
-    this.patient = null;
-    this.onClose?.();
-  }
 
-  render() {
-    if (!this.patient) return;
+    show(patient) {
+        this.patient = patient;
+        this.render();
+        document.body.appendChild(this.container);
+    }
 
-    this.container = document.createElement("div");
-    this.container.id = "delete-confirm-modal";
+    hide() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        this.patient = null;
+        this.onClose?.();
+    }
 
-    // Backdrop
-    const backdrop = document.createElement("div");
-    backdrop.className = "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in-0";
-    backdrop.addEventListener("click", () => this.hide());
+    render() {
+        if (!this.patient) return;
 
-    // Modal
-    const modal = document.createElement("div");
-    modal.className = "fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95";
-    modal.addEventListener("click", (e) => e.stopPropagation());
+        this.container = document.createElement("div");
+        this.container.id = "delete-confirm-modal";
 
-    modal.innerHTML = `
+        // Backdrop
+        const backdrop = document.createElement("div");
+        backdrop.className = "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in-0";
+        backdrop.addEventListener("click", () => this.hide());
+
+        // Modal
+        const modal = document.createElement("div");
+        modal.className = "fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95";
+        modal.addEventListener("click", (e) => e.stopPropagation());
+
+        modal.innerHTML = `
       <div class="bg-card border border-border rounded-xl shadow-lg p-6">
         <!-- Warning Icon -->
         <div class="flex items-center justify-center mb-4">
@@ -66,28 +66,28 @@ export class DeleteConfirmModal {
       </div>
     `;
 
-    // Add icons
-    const warningIcon = modal.querySelector("#warning-icon");
-    if (warningIcon) warningIcon.appendChild(icons.alertTriangle("h-6 w-6 text-destructive"));
+        // Add icons
+        const warningIcon = modal.querySelector("#warning-icon");
+        if (warningIcon) warningIcon.appendChild(icons.alertTriangle("h-6 w-6 text-destructive"));
 
-    const deleteIcon = modal.querySelector("#delete-icon");
-    if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
+        const deleteIcon = modal.querySelector("#delete-icon");
+        if (deleteIcon) deleteIcon.appendChild(icons.trash("h-4 w-4"));
 
-    // Event listeners
-    const cancelBtn = modal.querySelector("#cancel-btn");
-    if (cancelBtn) {
-      cancelBtn.addEventListener("click", () => this.hide());
+        // Event listeners
+        const cancelBtn = modal.querySelector("#cancel-btn");
+        if (cancelBtn) {
+            cancelBtn.addEventListener("click", () => this.hide());
+        }
+
+        const deleteBtn = modal.querySelector("#delete-btn");
+        if (deleteBtn) {
+            deleteBtn.addEventListener("click", () => {
+                this.onConfirm?.(this.patient);
+                this.hide();
+            });
+        }
+
+        this.container.appendChild(backdrop);
+        this.container.appendChild(modal);
     }
-
-    const deleteBtn = modal.querySelector("#delete-btn");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", () => {
-        this.onConfirm?.(this.patient);
-        this.hide();
-      });
-    }
-
-    this.container.appendChild(backdrop);
-    this.container.appendChild(modal);
-  }
 }
