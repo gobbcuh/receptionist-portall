@@ -29,7 +29,7 @@ export class CreateInvoiceModal {
             if (response.ok) {
                 const services = await response.json();
                 
-                this.availableServices = services.filter(s => s.id !== 'consultation');
+                this.availableServices = services;
                 
                 console.log('Loaded services (excluding consultation):', this.availableServices.length);
             } else {
@@ -41,6 +41,7 @@ export class CreateInvoiceModal {
             console.error('Error loading data:', error);
             this.patients = [];
             this.availableServices = [];
+            this.hasPendingConsultation = false;
         }
 
         this.render();
@@ -143,8 +144,31 @@ export class CreateInvoiceModal {
 
         // Patient select
         const patientSelect = this.container.querySelector("#patient-select");
-        patientSelect.addEventListener("change", (e) => {
+        patientSelect.addEventListener("change", async (e) => {
             this.selectedPatient = e.target.value;
+
+            if (this.selectedPatient) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/patients/${this.selectedPatient}/consultation-status`, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.hasPendingConsultation = data.has_pending_consultation;
+                        console.log(`Patient consultation status: has_pending=${this.hasPendingConsultation}`);
+                    }
+                } catch (error) {
+                    console.error('Error checking consultation status:', error);
+                    this.hasPendingConsultation = false;
+                }
+            } else {
+                this.hasPendingConsultation = false;
+            }
+
+            this.renderItems();
         });
 
         // Form submit
@@ -167,7 +191,10 @@ export class CreateInvoiceModal {
         <div class="flex-1">
           <select class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" data-index="${index}" data-field="service">
             <option value="">Select service...</option>
-            ${this.availableServices.map(s => `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""}>${s.name}</option>`).join("")}
+            ${this.availableServices.map(s => {
+                const isDisabled = (s.id === 'consultation' && this.hasPendingConsultation);
+                return `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""} ${isDisabled ? 'disabled' : ''}>${s.name} - ₱${parseFloat(s.price).toFixed(2)}${isDisabled ? ' (already charged)' : ''}</option>`;
+            }).join("")}
           </select>
         </div>
         <div class="w-20">
