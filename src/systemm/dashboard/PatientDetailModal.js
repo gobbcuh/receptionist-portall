@@ -87,6 +87,38 @@ export class PatientDetailModal {
         const historyContainer = this.container?.querySelector('#visit-history-container');
         if (!historyContainer) return;
 
+        // Update next follow-up in header
+        const nextFollowupContainer = this.container?.querySelector('#next-followup-container');
+        if (nextFollowupContainer && !this.isLoadingHistory) {
+            // Find next upcoming follow-up from all visits
+            const upcomingFollowups = this.visitHistory
+                .filter(v => v.followupDate)
+                .map(v => ({
+                    date: v.followupDate,
+                    dateObj: new Date(v.followupDate)
+                }))
+                .filter(f => f.dateObj >= new Date())
+                .sort((a, b) => a.dateObj - b.dateObj);
+            
+            const nextFollowup = upcomingFollowups[0];
+            
+            nextFollowupContainer.innerHTML = `
+                <div class="flex items-center gap-3 text-sm">
+                    <span id="next-followup-icon"></span>
+                    <span class="text-muted-foreground">Next Follow-up:</span>
+                    <span class="text-foreground ${nextFollowup && nextFollowup.dateObj.toDateString() === new Date().toDateString() ? 'font-semibold text-primary' : ''}">
+                        ${nextFollowup ? nextFollowup.date : "None scheduled"}
+                        ${nextFollowup && nextFollowup.dateObj.toDateString() === new Date().toDateString() ? ' 📅 (Today!)' : ''}
+                    </span>
+                </div>
+            `;
+            
+            const nextFollowupIcon = nextFollowupContainer.querySelector('#next-followup-icon');
+            if (nextFollowupIcon) {
+                nextFollowupIcon.appendChild(icons.calendar("h-4 w-4 text-muted-foreground"));
+            }
+        }
+
         if (this.isLoadingHistory) {
             historyContainer.innerHTML = `
                 <div class="flex items-center justify-center py-8">
@@ -152,8 +184,18 @@ export class PatientDetailModal {
                                         <span class="text-muted-foreground">Bill:</span>
                                         <span class="text-foreground font-medium">₱${visit.billTotal.toFixed(2)}</span>
                                         <span class="${isPaid ? 'text-success' : 'text-warning'} text-xs ml-auto">
-                                            ${isPaid ? 'Paid' : 'Pending'}
+                                            ${isPaid ? '✓ Paid' : 'Pending'}
                                         </span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${visit.followupDate ? `
+                                    <div class="flex items-center gap-2 mt-1 pt-2 border-t border-border/50">
+                                        <span id="followup-icon-${visit.visitId}"></span>
+                                        <span class="text-muted-foreground">Follow-up scheduled:</span>
+                                        <span class="text-foreground font-medium">${visit.followupDate}</span>
+                                        ${visit.followupDate === new Date().toISOString().split('T')[0] ? 
+                                            '<span class="text-primary text-xs ml-auto">📅 Today!</span>' : ''}
                                     </div>
                                 ` : ''}
                                 
@@ -198,6 +240,11 @@ export class PatientDetailModal {
             if (visit.checkInDate) {
                 const checkinIcon = historyContainer.querySelector(`#checkin-icon-${visit.visitId}`);
                 if (checkinIcon) checkinIcon.appendChild(icons.clock("h-3 w-3"));
+            }
+            
+            if (visit.followupDate) {
+                const followupIcon = historyContainer.querySelector(`#followup-icon-${visit.visitId}`);
+                if (followupIcon) followupIcon.appendChild(icons.calendar("h-3.5 w-3.5 text-muted-foreground"));
             }
         });
     }
@@ -269,12 +316,8 @@ export class PatientDetailModal {
               <span class="text-foreground">${this.patient.assignedDoctor || "Not assigned"}</span>
             </div>
 
-            <div class="flex items-center gap-3 text-sm">
-              <span id="calendar-icon"></span>
-              <span class="text-muted-foreground">Follow-up:</span>
-              <span class="text-foreground">
-                ${this.patient.hasFollowUp ? this.patient.followUpDate : "None scheduled"}
-              </span>
+            <div id="next-followup-container">
+              <!-- This will be populated after loading visit history -->
             </div>
 
             <div class="flex items-center gap-3 text-sm">

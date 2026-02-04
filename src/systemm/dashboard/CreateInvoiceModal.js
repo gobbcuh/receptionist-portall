@@ -143,7 +143,7 @@ export class CreateInvoiceModal {
               <!-- Follow-up Notification Badge -->
               <div id="followup-notification" style="display: none;" class="mt-2 flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
                 <span id="followup-icon"></span>
-                <span class="text-sm text-primary font-medium">Follow-up appointment detected for today</span>
+                <span id="followup-message" class="text-sm text-primary font-medium">Follow-up appointment detected for today</span>
               </div>
             </div>
             
@@ -267,8 +267,14 @@ export class CreateInvoiceModal {
                         
                         // Show notification badge if follow-up detected
                         const notification = this.container.querySelector("#followup-notification");
+                        const message = this.container.querySelector("#followup-message");
                         if (notification) {
                             notification.style.display = this.hasFollowUpToday ? "flex" : "none";
+                            
+                            // Update message with details
+                            if (this.hasFollowUpToday && message && followUpData.original_complaint) {
+                                message.textContent = `Follow-up for: ${followUpData.original_complaint} (${followUpData.previous_visit_date})`;
+                            }
                         }
                         
                         // Auto-select follow-up service if applicable
@@ -388,8 +394,19 @@ export class CreateInvoiceModal {
           <select class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" data-index="${index}" data-field="service">
             <option value="">Select service...</option>
             ${this.availableServices.map(s => {
-                const isDisabled = (s.id === 'consultation' && this.hasPendingConsultation);
-                return `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""} ${isDisabled ? 'disabled' : ''}>${s.name} - ₱${parseFloat(s.price).toFixed(2)}${isDisabled ? ' (already charged)' : ''}</option>`;
+                // Disable consultation if already charged
+                const isConsultationDisabled = (s.id === 'consultation' && this.hasPendingConsultation);
+                
+                // Disable follow-up if already added to items
+                const isFollowUpDisabled = (s.id === 'followup' && this.items.some(i => i.serviceId === 'followup'));
+                
+                const isDisabled = isConsultationDisabled || isFollowUpDisabled;
+                
+                let disabledReason = '';
+                if (isConsultationDisabled) disabledReason = ' (already charged)';
+                if (isFollowUpDisabled) disabledReason = ' (already added)';
+                
+                return `<option value="${s.id}" ${item.serviceId === s.id ? "selected" : ""} ${isDisabled ? 'disabled' : ''}>${s.name} - ₱${parseFloat(s.price).toFixed(2)}${disabledReason}</option>`;
             }).join("")}
           </select>
         </div>
