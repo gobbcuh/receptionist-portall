@@ -3,44 +3,95 @@ import { patientStore } from "../../data/patientStore";
 
 export class CreateInvoiceModal {
     constructor(onSave, onClose) {
-        this.onSave = onSave;
-        this.onClose = onClose;
-        this.container = null;
-        this.items = [{ serviceId: "", quantity: 1, unitPrice: 0, description: "" }];
-        this.selectedPatient = "";
-        this.patients = [];
-        this.availableServices = [];
-    }
+    this.onSave = onSave;
+    this.onClose = onClose;
+    this.container = null;
+    this.items = [{ serviceId: "", quantity: 1, unitPrice: 0, description: "" }];
+    this.selectedPatient = "";
+    this.selectedDepartment = "";
+    this.selectedDoctor = "";
+    this.chiefComplaint = "";
+    this.patients = [];
+    this.availableServices = [];
+    this.availableDepartments = [];
+    this.availableDoctors = [];
+    this.filteredDoctors = [];
+    this.hasPendingConsultation = false;
+    this.showDoctorDropdown = false;
+    this.showDepartmentDropdown = false;
+    this.showChiefComplaint = false;
+}
 
     async show() {
         this.items = [{ serviceId: "", quantity: 1, unitPrice: 0, description: "" }];
         this.selectedPatient = "";
+        this.selectedDepartment = "";
+        this.selectedDoctor = "";
+        this.chiefComplaint = "";
+        this.showDoctorDropdown = false;
+        this.showDepartmentDropdown = false;
+        this.showChiefComplaint = false;
 
         try {
+            // Load patients
             await patientStore.getPatients();
             this.patients = patientStore.patients;
             
-            const response = await fetch('http://localhost:5000/api/services', {
+            // Load services
+            const servicesResponse = await fetch('http://localhost:5000/api/services', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                 }
             });
             
-            if (response.ok) {
-                const services = await response.json();
-                
+            if (servicesResponse.ok) {
+                const services = await servicesResponse.json();
                 this.availableServices = services;
-                
-                console.log('Loaded services (excluding consultation):', this.availableServices.length);
+                console.log('Loaded services:', this.availableServices.length);
             } else {
                 console.error('Failed to load services');
                 this.availableServices = [];
+            }
+            
+            // Load departments
+            const departmentsResponse = await fetch('http://localhost:5000/api/departments', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+            
+            if (departmentsResponse.ok) {
+                const departments = await departmentsResponse.json();
+                this.availableDepartments = departments;
+                console.log('Loaded departments:', this.availableDepartments.length);
+            } else {
+                console.error('Failed to load departments');
+                this.availableDepartments = [];
+            }
+            
+            // Load doctors
+            const doctorsResponse = await fetch('http://localhost:5000/api/doctors', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+            
+            if (doctorsResponse.ok) {
+                const doctors = await doctorsResponse.json();
+                this.availableDoctors = doctors;
+                this.filteredDoctors = [];
+                console.log('Loaded doctors:', this.availableDoctors.length);
+            } else {
+                console.error('Failed to load doctors');
+                this.availableDoctors = [];
             }
             
         } catch (error) {
             console.error('Error loading data:', error);
             this.patients = [];
             this.availableServices = [];
+            this.availableDepartments = [];
+            this.availableDoctors = [];
             this.hasPendingConsultation = false;
         }
 
@@ -86,6 +137,30 @@ export class CreateInvoiceModal {
                 <option value="">Select a patient...</option>
                 ${this.patients.map(p => `<option value="${p.id}">${p.name}</option>`).join("")}
               </select>
+            </div>
+            
+            <!-- Department Selection (shown only for new consultations) -->
+            <div id="department-container" style="display: none;">
+              <label class="block text-sm font-medium text-foreground mb-2">Department *</label>
+              <select id="department-select" class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="">Select department...</option>
+                ${this.availableDepartments.map(d => `<option value="${d.department_id}">${d.name}</option>`).join("")}
+              </select>
+            </div>
+            
+            <!-- Doctor Selection (shown only after department selected) -->
+            <div id="doctor-container" style="display: none;">
+              <label class="block text-sm font-medium text-foreground mb-2">Assigned Doctor *</label>
+              <select id="doctor-select" class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="">Select a doctor...</option>
+                ${this.filteredDoctors.map(d => `<option value="${d.doctor_id}">${d.full_name}</option>`).join("")}
+              </select>
+            </div>
+            
+            <!-- Chief Complaint (shown only for new consultations) -->
+            <div id="chief-complaint-container" style="display: none;">
+              <label class="block text-sm font-medium text-foreground mb-2">Chief Complaint *</label>
+              <textarea id="chief-complaint" placeholder="e.g., Sprained ankle, fever, chest pain..." rows="2" class="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"></textarea>
             </div>
             
             <!-- Line Items -->
@@ -170,6 +245,48 @@ export class CreateInvoiceModal {
 
             this.renderItems();
         });
+        
+
+        // Department select
+        const departmentSelect = this.container.querySelector("#department-select");
+        departmentSelect.addEventListener("change", (e) => {
+            this.selectedDepartment = e.target.value;
+            
+            if (this.selectedDepartment) {
+                // Filter doctors by selected department
+                this.filteredDoctors = this.availableDoctors.filter(
+                    d => d.department_id === this.selectedDepartment
+                );
+                
+                // Re-render to update doctor dropdown
+                this.updateDoctorDropdown();
+                
+                // Show doctor dropdown
+                const doctorContainer = this.container.querySelector("#doctor-container");
+                if (doctorContainer) {
+                    doctorContainer.style.display = "block";
+                }
+            } else {
+                // Hide doctor dropdown if no department
+                this.filteredDoctors = [];
+                const doctorContainer = this.container.querySelector("#doctor-container");
+                if (doctorContainer) {
+                    doctorContainer.style.display = "none";
+                }
+            }
+        });
+        
+        // Doctor select
+        const doctorSelect = this.container.querySelector("#doctor-select");
+        doctorSelect.addEventListener("change", (e) => {
+            this.selectedDoctor = e.target.value;
+        });
+        
+        // Chief complaint
+        const chiefComplaintInput = this.container.querySelector("#chief-complaint");
+        chiefComplaintInput.addEventListener("input", (e) => {
+            this.chiefComplaint = e.target.value;
+        });
 
         // Form submit
         const form = this.container.querySelector("#invoice-form");
@@ -177,6 +294,16 @@ export class CreateInvoiceModal {
 
         // Render items
         this.renderItems();
+    }
+
+    updateDoctorDropdown() {
+        const doctorSelect = this.container.querySelector("#doctor-select");
+        if (!doctorSelect) return;
+        
+        doctorSelect.innerHTML = `
+            <option value="">Select a doctor...</option>
+            ${this.filteredDoctors.map(d => `<option value="${d.doctor_id}">${d.full_name}</option>`).join("")}
+        `;
     }
 
     renderItems() {
@@ -224,6 +351,30 @@ export class CreateInvoiceModal {
                 this.items[index].serviceId = serviceId;
                 this.items[index].description = service?.name || "";
                 this.items[index].unitPrice = parseFloat(service?.price) || 0;
+                
+                // Show department/doctor/chief complaint for consultation or emergency
+                const needsConsultationFields = ['consultation', 'emergency'].includes(serviceId);
+                this.showDepartmentDropdown = needsConsultationFields;
+                this.showChiefComplaint = needsConsultationFields;
+                
+                // Update field visibility
+                const departmentContainer = this.container.querySelector("#department-container");
+                const chiefComplaintContainer = this.container.querySelector("#chief-complaint-container");
+                
+                if (departmentContainer) {
+                    departmentContainer.style.display = this.showDepartmentDropdown ? "block" : "none";
+                }
+                
+                if (chiefComplaintContainer) {
+                    chiefComplaintContainer.style.display = this.showChiefComplaint ? "block" : "none";
+                }
+                
+                // Hide doctor dropdown until department is selected
+                const doctorContainer = this.container.querySelector("#doctor-container");
+                if (doctorContainer && !this.selectedDepartment) {
+                    doctorContainer.style.display = "none";
+                }
+                
                 this.renderItems();
                 this.updateTotals();
             });
@@ -272,12 +423,31 @@ export class CreateInvoiceModal {
             return;
         }
 
+        // Validate consultation fields
+        if (this.showDepartmentDropdown) {
+            if (!this.selectedDepartment) {
+                alert("Please select a department");
+                return;
+            }
+            if (!this.selectedDoctor) {
+                alert("Please select a doctor");
+                return;
+            }
+            if (!this.chiefComplaint || this.chiefComplaint.trim() === '') {
+                alert("Please enter the chief complaint");
+                return;
+            }
+        }
+
         const { subtotal, tax, total } = this.calculateTotals();
 
         const invoice = {
             id: `INV-${String(Date.now()).slice(-6)}`,
             patientId: patient.id,
             patientName: patient.name,
+            departmentId: this.selectedDepartment || null,
+            doctorId: this.selectedDoctor || null,
+            chiefComplaint: this.chiefComplaint || null,
             date: new Date().toISOString(),
             items: validItems.map(item => ({
                 description: item.description,
