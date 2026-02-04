@@ -17,6 +17,8 @@ export class CreateInvoiceModal {
     this.availableDoctors = [];
     this.filteredDoctors = [];
     this.hasPendingConsultation = false;
+    this.hasFollowUpToday = false;
+    this.followUpData = null;
     this.showDoctorDropdown = false;
     this.showDepartmentDropdown = false;
     this.showChiefComplaint = false;
@@ -137,6 +139,12 @@ export class CreateInvoiceModal {
                 <option value="">Select a patient...</option>
                 ${this.patients.map(p => `<option value="${p.id}">${p.name}</option>`).join("")}
               </select>
+              
+              <!-- Follow-up Notification Badge -->
+              <div id="followup-notification" style="display: none;" class="mt-2 flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
+                <span id="followup-icon"></span>
+                <span class="text-sm text-primary font-medium">Follow-up appointment detected for today</span>
+              </div>
             </div>
             
             <!-- Department Selection (shown only for new consultations) -->
@@ -202,6 +210,12 @@ export class CreateInvoiceModal {
         closeBtn.appendChild(icons.x("h-5 w-5 text-muted-foreground"));
         closeBtn.addEventListener("click", () => this.hide());
 
+        // Add follow-up notification icon
+        const followUpIcon = this.container.querySelector("#followup-icon");
+        if (followUpIcon) {
+            followUpIcon.appendChild(icons.calendar("h-4 w-4 text-primary"));
+        }
+
         // Backdrop click
         const backdrop = this.container.querySelector("#backdrop");
         backdrop.addEventListener("click", () => this.hide());
@@ -224,26 +238,81 @@ export class CreateInvoiceModal {
 
             if (this.selectedPatient) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/patients/${this.selectedPatient}/consultation-status`, {
+                    // Check consultation status
+                    const statusResponse = await fetch(`http://localhost:5000/api/patients/${this.selectedPatient}/consultation-status`, {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                         }
                     });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.hasPendingConsultation = data.has_pending_consultation;
-                        console.log(`Patient consultation status: has_pending=${this.hasPendingConsultation}`);
+                    if (statusResponse.ok) {
+                        const statusData = await statusResponse.json();
+                        this.hasPendingConsultation = statusData.has_pending_consultation;
+                        console.log(`✓ Patient consultation status: has_pending=${this.hasPendingConsultation}`);
                     }
+                    
+                    // Check for follow-up appointment
+                    const followUpResponse = await fetch(`http://localhost:5000/api/patients/${this.selectedPatient}/followup-check`, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        }
+                    });
+                    
+                    if (followUpResponse.ok) {
+                        const followUpData = await followUpResponse.json();
+                        this.hasFollowUpToday = followUpData.has_followup_today;
+                        this.followUpData = followUpData;
+                        
+                        console.log(`✓ Follow-up check: has_followup_today=${this.hasFollowUpToday}`);
+                        
+                        // Show notification badge if follow-up detected
+                        const notification = this.container.querySelector("#followup-notification");
+                        if (notification) {
+                            notification.style.display = this.hasFollowUpToday ? "flex" : "none";
+                        }
+                        
+                        // Auto-select follow-up service if applicable
+                        if (this.hasFollowUpToday && this.items.length === 1 && !this.items[0].serviceId) {
+                            const followUpService = this.availableServices.find(s => s.id === 'followup');
+                            if (followUpService) {
+                                this.items[0].serviceId = 'followup';
+                                this.items[0].description = followUpService.name;
+                                this.items[0].unitPrice = parseFloat(followUpService.price);
+                                
+                                // Auto-fill doctor from previous visit
+                                if (followUpData.previous_doctor_id) {
+                                    this.selectedDoctor = followUpData.previous_doctor_id;
+                                }
+                                
+                                console.log(`✓ Auto-selected: Follow-up Visit (₱${followUpService.price})`);
+                                
+                                // Re-render items to show selection in dropdown
+                                this.renderItems();
+                                this.updateTotals();
+                            }
+                        }
+                    }
+                    
                 } catch (error) {
-                    console.error('Error checking consultation status:', error);
+                    console.error('Error checking patient status:', error);
                     this.hasPendingConsultation = false;
+                    this.hasFollowUpToday = false;
                 }
             } else {
                 this.hasPendingConsultation = false;
+                this.hasFollowUpToday = false;
+                
+                // Hide notification
+                const notification = this.container.querySelector("#followup-notification");
+                if (notification) {
+                    notification.style.display = "none";
+                }
             }
 
-            this.renderItems();
+            // Only re-render if we didn't already render during follow-up auto-select
+            if (!this.hasFollowUpToday || this.items[0].serviceId !== 'followup') {
+                this.renderItems();
+            }
         });
         
 
