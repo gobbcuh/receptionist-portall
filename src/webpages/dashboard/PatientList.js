@@ -19,7 +19,7 @@ export class PatientList {
         this.deleteModal = new DeleteConfirmModal(
             (patient) => {
                 patientStore.deletePatient(patient.id);
-                this.message = { type: "success", text: `${patient.name} has been deleted.` };
+                this.message = { type: "success", text: `${patient.name} has been deactivated.` };
                 this.updateContent();
                 setTimeout(() => { this.message = null; this.updateContent(); }, 3000);
             },
